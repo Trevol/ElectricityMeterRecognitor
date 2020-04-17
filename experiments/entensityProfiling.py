@@ -69,7 +69,8 @@ def imageView(image):
         assert len(image.shape) == 2  # for gray
         for x, y in points(pt1, pt2):
             xyIntensity = image[y, x]
-            elevationImage[plotHeight - xyIntensity:, x] = max(xyIntensity, 40)
+            elevationImage[plotHeight - xyIntensity:, x] = xyIntensity
+            elevationImage[plotHeight - xyIntensity, x] = 255
 
         cv2.imshow(elevationWndName, elevationImage)
 
@@ -111,6 +112,8 @@ def imageView(image):
 
 def main():
     image = getImage()
+    # image = cv2.blur(image, (7, 7))
+    image = cv2.medianBlur(image, 7)
     imageView(image)
 
 

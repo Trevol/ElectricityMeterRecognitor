@@ -14,11 +14,14 @@ matplotlib.rcParams['font.size'] = 9
 image = cv2.imread("../counter_images/01305.png", cv2.IMREAD_GRAYSCALE)
 # image = cv2.imread("../venv/lib/python3.7/site-packages/skimage/data/page.png", cv2.IMREAD_GRAYSCALE)
 
-# image = 255 - image
+image = 255 - image
+
+
+image = cv2.medianBlur(image, 7)
 
 binary_global = image > threshold_otsu(image)
 
-window_size = 15
+window_size = 41
 thresh_niblack = threshold_niblack(image, window_size=window_size, k=0.8)
 thresh_sauvola = threshold_sauvola(image, window_size=window_size, k=.1)
 
