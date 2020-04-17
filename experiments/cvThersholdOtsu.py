@@ -5,9 +5,10 @@ from utils import imshow
 
 
 def main():
-    image = cv2.imread("../counter_images/01305.png", cv2.IMREAD_GRAYSCALE)
+    # image = cv2.imread("../counter_images/01305.png", cv2.IMREAD_GRAYSCALE)
+    image = cv2.imread("../counter_images/01305.png")
     image = cv2.blur(image, (5, 5))
-    image = 255 - image
+    # image = 255 - image
 
     # image = image[59:201, 103:187]
     saliency = cv2.saliency_StaticSaliencyFineGrained.create()

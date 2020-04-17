@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 from utils import imshow
 
 
@@ -15,6 +16,8 @@ winName = "image"
 
 def imageView(image):
     green = (0, 200, 0)
+    red = (0, 0, 200)
+    elevationWndName = 'intensity-elevation'
 
     def showSelectionState(currentPoint=None):
         cv2.setWindowTitle(winName, state)
@@ -28,7 +31,7 @@ def imageView(image):
             cv2.circle(stateImage, pt1, 2, green, -1)
             # assert pt2 and currentPoint
             if pt2:
-                cv2.circle(stateImage, pt2, 2, green, -1)
+                cv2.circle(stateImage, pt2, 2, red, -1)
             pt2 = pt2 or currentPoint
             if pt2:
                 cv2.line(stateImage, pt1, pt2 or currentPoint, green)
@@ -45,10 +48,35 @@ def imageView(image):
         nonlocal state
         state = 'line-selected'
         selectedLine[1] = (x, y)
+        measureElevation()
         showSelectionState()
+
+    def points(pt1, pt2):
+        x1, y1 = pt1
+        x2, y2 = pt2
+        xStep = (x2 - x1) // abs(x2 - x1)
+        pts = []
+        for x in range(x1, x2 + xStep, xStep):
+            y = (y2 - y1) * (x - x1) / (x2 - x1) + y1
+            pts.append((x, round(y)))
+        return pts
+
+    def measureElevation():
+        pt1, pt2 = selectedLine
+        assert pt1 and pt2
+        plotHeight = 255
+        elevationImage = np.zeros([plotHeight, image.shape[1]], np.uint8)
+        assert len(image.shape) == 2  # for gray
+        for x, y in points(pt1, pt2):
+            xyIntensity = image[y, x]
+            elevationImage[plotHeight - xyIntensity:, x] = max(xyIntensity, 40)
+
+        cv2.imshow(elevationWndName, elevationImage)
 
     def cleanup():
         nonlocal state
+        if state == 'line-selected':
+            cv2.destroyWindow(elevationWndName)
         state = 'initial'
         selectedLine[0] = selectedLine[1] = None
         showSelectionState()
