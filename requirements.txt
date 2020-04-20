@@ -1,0 +1,4 @@
+Pillow
+scikit-image
+opencv-contrib-python
+matplotlib
