@@ -10,13 +10,7 @@ import math
 
 from utils import imshow, fit_image_to_shape, imageLaplacianSharpness
 from utils.list_utils import splitList
-
-
-def recreateDir(d):
-    if os.path.isdir(d):
-        # os.removedirs(d)
-        shutil.rmtree(d)
-    os.makedirs(d, exist_ok=False)
+from utils.path_utils import recreateDir
 
 
 def downsize_calcSharpness_saveDownsized(imagesBasePath, desiredSize, resizedImagesPath):
@@ -84,7 +78,6 @@ def steps():
     recreateDir(selectedImagesPath)
     for imagePath in sharpestImages:
         shutil.copy(imagePath, selectedImagesPath)
-
 
 
 steps()
