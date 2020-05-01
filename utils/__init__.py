@@ -1,1 +1,1 @@
-from .imshow import *
+from .imutils import *

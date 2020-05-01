@@ -7,3 +7,16 @@
 - make images backup
 - remove garbage (manually)
 - run rename_to_sequential.py
+
+
+- collect photos/videos by phone
+- split videos to frames (vid_to_frames.py)
+- detect (and skip) blurred frames
+   - select_N_less_blurred.py
+   - https://www.pyimagesearch.com/2015/09/07/blur-detection-with-opencv/
+         - https://github.com/hirocaster/opencv_sandbox/blob/master/detect_blur_for_all.py
+   - google "how to detect motion blur"
+   - https://stackoverflow.com/questions/1881013/is-there-a-algorithm-or-library-that-can-detect-motion-blur-in-images
+            Out-of-focus blur is not directional, whereas linear-motion blur is. You can run a Principal Component Analysis to obtain
+            the eigenvalues of the blur's characteristic edge points' direction vectors and assess the strength of the predominant one.
+            If it's beyond a certain threshold, you can conclude that the blur is directional, thus linear motion blur.

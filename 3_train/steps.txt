@@ -1,0 +1,12 @@
+- what to use
+   - current:
+   - google "pytorch mobilenet v3 object detection"
+       - https://github.com/qfgaohao/pytorch-ssd
+       - https://github.com/shaoshengsong/MobileNetV3-SSD
+       - "CoordConv"
+       - https://paperswithcode.com/paper/searching-for-mobilenetv3
+       - https://pytorch.org/docs/stable/torchvision/models.html !!!!!!!!!!!!!!!!!!!!
+       - https://pytorch.org/hub/nvidia_deeplearningexamples_ssd/
+       - https://awesomeopensource.com/projects/mobilenet
+
+- https://github.com/ildoonet/tf-pose-estimation

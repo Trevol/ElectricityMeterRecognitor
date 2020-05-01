@@ -2,3 +2,8 @@ Pillow
 scikit-image
 opencv-contrib-python
 matplotlib
+tensorflow
+tqdm
+sklearn
+imgaug
+imutils
