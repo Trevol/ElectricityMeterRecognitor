@@ -30,19 +30,18 @@ def main():
         '/hdd/Datasets/counters/2_from_phone/val'
     ]
 
-    train_generator = createDataGenerator(trainDataDirs, config, True)
-    valid_generator = createDataGenerator(valDataDirs, config, False)
-
     model = config.create_model()
 
     learning_rate, save_dname, n_epoches = config.get_train_params()
 
+    train_generator = createDataGenerator(trainDataDirs, config, True)
+    valid_generator = createDataGenerator(valDataDirs, config, False)
     train_fn(model,
              train_generator,
              valid_generator,
-             learning_rate=learning_rate,
+             learning_rate=.0001,
              save_dname=save_dname,
-             num_epoches=n_epoches)
+             num_epoches=30)
 
 
 if __name__ == '__main__':
