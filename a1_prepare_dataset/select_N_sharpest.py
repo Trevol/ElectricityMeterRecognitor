@@ -25,7 +25,7 @@ def downsize_calcSharpness_saveDownsized(imagesBasePath, desiredSize, resizedIma
         imageFileName = f"{i:06d}" + os.path.splitext(image_path)[1]
         resizedImagePath = os.path.join(resizedImagesPath, imageFileName)
         imagesWithSharpness.append((resizedImagePath, laplacianVariance))
-        cv2.imwrite(resizedImagePath, image)
+        cv2.imwrite(resizedImagePath, resizedImage)
     return imagesWithSharpness
 
 
@@ -67,14 +67,14 @@ def split_train_val(images, trainRatio, baseDir):
 
 def steps():
     # downsize, calc sharpness and save downsized images to all_downsized
-    imagesBasePath = '/hdd/Datasets/counters/1_from_phone/all'
-    resizedImagesPath = '/hdd/Datasets/counters/1_from_phone/all_downsized'
+    imagesBasePath = '/hdd/Datasets/counters/1_from_phone/0_all'
+    resizedImagesPath = '/hdd/Datasets/counters/1_from_phone/1_all_downsized'
     imagesWithSharpness: list = downsize_calcSharpness_saveDownsized(imagesBasePath, (1024, 1024), resizedImagesPath)
 
     # select N sharpest images (downsized)
     sharpestImages = select_N_sharpest(imagesWithSharpness, N=50)
     sharpestImages = [i for i, _ in sharpestImages]
-    selectedImagesPath = '/hdd/Datasets/counters/1_from_phone/selected'
+    selectedImagesPath = '/hdd/Datasets/counters/1_from_phone/2_selected'
     recreateDir(selectedImagesPath)
     for imagePath in sharpestImages:
         shutil.copy(imagePath, selectedImagesPath)

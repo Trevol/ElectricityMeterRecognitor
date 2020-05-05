@@ -6,7 +6,7 @@ import shutil
 
 def main():
     paths = [
-        './*/*.*'        
+        '/hdd/Datasets/counters/2_from_phone/*.jpg'
     ]
     filePaths = (filePath for p in paths for filePath in glob(p))
 

@@ -251,7 +251,7 @@ def visualize_boxes(image, boxes, labels, probs, class_labels):
         category_index[id_] = {"name": label_name}
     
     boxes = np.array([np.array([b[1],b[0],b[3],b[2]]) for b in boxes])
-    visualize_boxes_and_labels_on_image_array(image, boxes, labels, probs, category_index)
+    visualize_boxes_and_labels_on_image_array(image, boxes, labels, probs, category_index, line_thickness=1)
 
 
 if __name__ == '__main__':

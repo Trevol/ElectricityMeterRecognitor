@@ -10,7 +10,8 @@ import os
 
 
 def main():
-    imagesPattern = '/hdd/Datasets/counters/0_from_phone/V_20200429_081246/*.jpg'
+    # imagesPattern = '/hdd/Datasets/counters/1_from_phone/1_all_downsized/*.jpg'
+    imagesPattern = '/hdd/Datasets/counters/2/*.jpg'
 
     configFile = "configs/counters.json"
 

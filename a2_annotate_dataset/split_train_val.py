@@ -8,10 +8,10 @@ from yolo.dataset.annotation import parse_annotation
 
 
 def main():
-    allAnnotationDir = '/hdd/Datasets/counters/1_from_phone/2_selected'
+    allAnnotationDir = '/hdd/Datasets/counters/2_from_phone/all'
     allImagesDir = allAnnotationDir
-    trainDir = '/hdd/Datasets/counters/1_from_phone/train'
-    valDir = '/hdd/Datasets/counters/1_from_phone/val'
+    trainDir = '/hdd/Datasets/counters/2_from_phone/train'
+    valDir = '/hdd/Datasets/counters/2_from_phone/val'
     labels = ["counter", "counter_screen"]
     trainSplitRatio = .85
 

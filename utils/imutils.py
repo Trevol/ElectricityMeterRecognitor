@@ -9,7 +9,7 @@ def imshow(*unnamedMat, **namedMat):
             mat, title = matOrMatWithTitle
         else:
             mat, title = matOrMatWithTitle, None
-        cv2.imshow(name, mat)
+        cv2.imshow(str(name), mat)
         if title is not None:
             cv2.setWindowTitle(name, str(title))
 
