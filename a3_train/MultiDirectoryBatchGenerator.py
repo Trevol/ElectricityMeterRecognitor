@@ -125,15 +125,16 @@ class MultiDirectoryBatchGenerator(object):
 
 
 def _getAnnotationFiles(dataDirs):
-    # annotationFiles = []
-    # for dataDir in dataDirs:
-    #     xmlFilesInDataDir = glob.glob(os.path.join(dataDir, "*.xml"))
-    #     annotationFiles.extend(xmlFilesInDataDir)
+    annotationFiles = []
+    for dataDir in dataDirs:
+        xmlFilesInDataDir = glob.glob(os.path.join(dataDir, "*.xml"))
+        annotationFiles.extend(xmlFilesInDataDir)
+    return annotationFiles
 
-    filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
-    annotationFiles = itertools.chain.from_iterable(filesByDir)
-
-    return sorted(annotationFiles)
+    # filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
+    # annotationFiles = itertools.chain.from_iterable(filesByDir)
+    #
+    # return sorted(annotationFiles)
 
 
 def _create_empty_xy(net_size, n_classes, n_boxes=3):
