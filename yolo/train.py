@@ -7,7 +7,7 @@ from tqdm import tqdm
 from yolo.loss import loss_fn
 
 
-def train_fn(model, train_generator, valid_generator=None, learning_rate=1e-4, num_epoches=500, save_dname=None):
+def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches, stepsPerEpoch, save_dname=None):
     save_fname = _setup(save_dname)
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
@@ -15,11 +15,11 @@ def train_fn(model, train_generator, valid_generator=None, learning_rate=1e-4, n
     for i in range(num_epoches):
 
         # 1. update params
-        train_loss = _loop_train(model, optimizer, train_generator)
+        train_loss = _train_epoch(model, optimizer, train_generator, stepsPerEpoch)
 
         # 2. monitor validation loss
         if valid_generator:
-            valid_loss = _loop_validation(model, valid_generator)
+            valid_loss = validation_loop(model, valid_generator)
             loss_value = valid_loss
         else:
             loss_value = train_loss
@@ -37,32 +37,29 @@ def train_fn(model, train_generator, valid_generator=None, learning_rate=1e-4, n
     return history
 
 
-def _loop_train(model, optimizer, generator):
-    # one epoch
-
-    n_steps = generator.steps_per_epoch
+def _train_epoch(model, optimizer, generator, stepsPerEpoch):
     loss_value = 0
-    for _ in tqdm(range(n_steps)):
+    for _ in tqdm(range(stepsPerEpoch)):
         xs, yolo_1, yolo_2, yolo_3 = generator.next_batch()
         ys = [yolo_1, yolo_2, yolo_3]
         grads, loss = _grad_fn(model, xs, ys)
         loss_value += loss
         optimizer.apply_gradients(zip(grads, model.variables))
-    loss_value /= generator.steps_per_epoch
+    loss_value /= stepsPerEpoch
     return loss_value
 
 
-def _loop_validation(model, generator):
-    # one epoch
-    n_steps = generator.steps_per_epoch
+def validation_loop(model, generator):
     loss_value = 0
-    for _ in range(n_steps):
+    batchesCount = generator.batchesCount()
+    assert batchesCount > 0
+    for _ in range(batchesCount):
         xs, yolo_1, yolo_2, yolo_3 = generator.next_batch()
-        ys = [yolo_1, yolo_2, yolo_3]
-        ys_ = model(xs)
-        loss_value += loss_fn(ys, ys_)
-    loss_value /= generator.steps_per_epoch
-    return loss_value
+        ys_gt = [yolo_1, yolo_2, yolo_3]
+        ys_predicted = model(xs)
+        loss_value += loss_fn(ys_gt, ys_predicted)
+    avgLossValue = loss_value / batchesCount
+    return avgLossValue
 
 
 def _setup(save_dname):
