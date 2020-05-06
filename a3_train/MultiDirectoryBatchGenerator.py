@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 from albumentations import Compose, BboxParams
 
-from yolo.dataset.augment import ImgAugment
+from yolo.dataset.augment import ImgAugment, resize_image
 from yolo.utils.box import create_anchor_boxes
 from yolo.dataset.annotation import parse_annotation
 from yolo import COCO_ANCHORS
@@ -27,17 +27,14 @@ class MultiDirectoryBatchGenerator(object):
                  labels,
                  batch_size,
                  anchors=COCO_ANCHORS,
-                 min_net_size=320,
-                 max_net_size=608,
+                 image_size=320,
                  shuffle=True,
                  augmentations=None,
                  steps_per_epoch=1000,
                  normalizeImage=True):
-
         self.ann_fnames = _getAnnotationFiles(dataDirectories)
         self.lable_names = labels
-        self.min_net_size = (min_net_size // DOWNSAMPLE_RATIO) * DOWNSAMPLE_RATIO
-        self.max_net_size = (max_net_size // DOWNSAMPLE_RATIO) * DOWNSAMPLE_RATIO
+        self.image_size = image_size
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -49,26 +46,9 @@ class MultiDirectoryBatchGenerator(object):
                                                                 min_visibility=.8))
         self.steps_per_epoch = steps_per_epoch
         self.normalizeImage = normalizeImage
-        self._epoch = 0
-        self._end_epoch = False
         self._index = 0
-        self._initial_net_size()
-
-    def _initial_net_size(self):
-        self._net_size = DOWNSAMPLE_RATIO * (
-                (self.min_net_size / DOWNSAMPLE_RATIO + self.max_net_size / DOWNSAMPLE_RATIO) // 2)
-        self._net_size = int(self._net_size)
-        print("_initial_net_size")
-        print(self.min_net_size, self.max_net_size, self._net_size)
-
-    def _update_net_size(self):
-        self._net_size = DOWNSAMPLE_RATIO * np.random.randint(self.min_net_size / DOWNSAMPLE_RATIO, \
-                                                              self.max_net_size / DOWNSAMPLE_RATIO + 1)
 
     def next_batch(self):
-        if self._epoch >= 5:
-            self._update_net_size()
-
         xs = []
         ys_1 = []
         ys_2 = []
@@ -91,50 +71,54 @@ class MultiDirectoryBatchGenerator(object):
 
     def _get(self):
 
-        net_size = self._net_size
-
         # 1. get input file & its annotation
         annotationFileName = self.ann_fnames[self._index]
         directory = os.path.split(annotationFileName)[0]
         fname, boxes, coded_labels = parse_annotation(annotationFileName, directory, self.lable_names)
 
-        # 2. read image in fixed size
-        img_augmenter = ImgAugment(net_size, net_size, False)
-        img, boxes_ = img_augmenter.imread(fname, boxes)
-        # img, boxes, coded_labels = self._augment(cv2.imread(fname), boxes, coded_labels)
+        img = cv2.imread(fname)
+        img, boxes, coded_labels = self._preprocessInputs(img, boxes, coded_labels)
 
         # 3. Append ys
-        list_ys = _create_empty_xy(net_size, len(self.lable_names))
+        list_ys = _create_empty_xy(self._net_size, len(self.lable_names))
         for original_box, label in zip(boxes, coded_labels):
             max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
 
-            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, net_size, net_size)
+            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, self._net_size, self._net_size)
             _assign_box(list_ys[scale_index], box_index, _coded_box, label)
 
         self._index += 1
         if self._index == self.steps_per_epoch:
             self._index = 0
             self._end_epoch = True
+
+        return img, list_ys[2], list_ys[1], list_ys[0]
+
+    def _preprocessInputs(self, img, boxes, labels):
+        img, boxes, labels = self._augment(img, boxes, labels)
+        # resize image and boxes, convert BGR to RGB
+        img, boxes = resize_image(img, boxes, self._net_size, self._net_size)
         if self.normalizeImage:
             img = _normalize(img)
-        return img, list_ys[2], list_ys[1], list_ys[0]
+        return img, boxes, labels
 
     def _augment(self, image, boxes, labels):
         r = self.augmentations(image=image, bboxes=boxes, labels=labels)
         return r['image'], r['bboxes'], r['labels']
 
+    def _preprocesInputs_OBSOLETE(self, fname, boxes):
+        # 2. read image in fixed size
+        img_augmenter = ImgAugment(self.net_size, self.net_size, False)
+        img, boxes = img_augmenter.imread(fname, boxes)
+        if self.normalizeImage:
+            img = _normalize(img)
+        return img, boxes
+
 
 def _getAnnotationFiles(dataDirs):
-    annotationFiles = []
-    for dataDir in dataDirs:
-        xmlFilesInDataDir = glob.glob(os.path.join(dataDir, "*.xml"))
-        annotationFiles.extend(xmlFilesInDataDir)
-    return annotationFiles
-
-    # filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
-    # annotationFiles = itertools.chain.from_iterable(filesByDir)
-    #
-    # return sorted(annotationFiles)
+    filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
+    annotationFiles = itertools.chain.from_iterable(filesByDir)
+    return sorted(annotationFiles)
 
 
 def _create_empty_xy(net_size, n_classes, n_boxes=3):

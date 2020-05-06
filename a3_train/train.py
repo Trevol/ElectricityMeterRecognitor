@@ -4,23 +4,21 @@ import utils.suppressTfWarnings
 from a3_train.MultiDirectoryBatchGenerator import MultiDirectoryBatchGenerator
 from yolo.train import train_fn
 from yolo.config import ConfigParser
-
+import a3_train.augmentations as augmentations
 
 def createDataGenerator(dataDirs, config, shuffle, augmentations, steps_per_epoch):
     return MultiDirectoryBatchGenerator(dataDirs,
                                         labels=config._model_config["labels"],
                                         batch_size=config._train_config["batch_size"],
                                         anchors=config._model_config["anchors"],
-                                        min_net_size=config._train_config["min_size"],
-                                        max_net_size=config._train_config["max_size"],
+                                        image_size=config._model_config["net_size"],
                                         shuffle=shuffle,
                                         augmentations=augmentations,
                                         steps_per_epoch=steps_per_epoch)
 
 
 def makeAugmentations():
-    augmentations = []
-    return Compose(augmentations, bbox_params=BboxParams(format='pascal_voc', min_visibility=.8))
+    return Compose(augmentations.make(), bbox_params=BboxParams(format='pascal_voc', min_visibility=.8))
 
 
 def main():

@@ -8,16 +8,15 @@ from yolo.loss import loss_fn
 
 
 def train_fn(model, train_generator, valid_generator=None, learning_rate=1e-4, num_epoches=500, save_dname=None):
-    
     save_fname = _setup(save_dname)
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
-    
+
     history = []
     for i in range(num_epoches):
 
         # 1. update params
         train_loss = _loop_train(model, optimizer, train_generator)
-        
+
         # 2. monitor validation loss
         if valid_generator:
             valid_loss = _loop_validation(model, valid_generator)
@@ -34,13 +33,13 @@ def train_fn(model, train_generator, valid_generator=None, learning_rate=1e-4, n
             model.save_weights(f"{save_fname}.h5")
             with open(f"{save_fname}.txt", "wt") as f:
                 f.write(info)
-    
+
     return history
 
 
 def _loop_train(model, optimizer, generator):
     # one epoch
-    
+
     n_steps = generator.steps_per_epoch
     loss_value = 0
     for _ in tqdm(range(n_steps)):
@@ -82,7 +81,3 @@ def _grad_fn(model, images_tensor, list_y_trues):
         loss = loss_fn(list_y_trues, logits)
         # print("loss = ", loss)
     return tape.gradient(loss, model.variables), loss
-
-
-if __name__ == '__main__':
-    pass
