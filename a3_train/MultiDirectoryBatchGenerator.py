@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-
+import math
 import os
 import glob
+from itertools import cycle
 
 import cv2
 import numpy as np
-import tensorflow as tf
 from albumentations import Compose, BboxParams
 
-from yolo.dataset.augment import ImgAugment, resize_image
+from yolo.dataset.augment import resize_image
 from yolo.utils.box import create_anchor_boxes
 from yolo.dataset.annotation import parse_annotation
 from yolo import COCO_ANCHORS
@@ -18,7 +18,6 @@ import itertools
 
 # ratio between network input's size and network output's size, 32 for YOLOv3
 DOWNSAMPLE_RATIO = 32
-DEFAULT_NETWORK_SIZE = 288
 
 
 class MultiDirectoryBatchGenerator(object):
@@ -28,91 +27,92 @@ class MultiDirectoryBatchGenerator(object):
                  batch_size,
                  anchors=COCO_ANCHORS,
                  image_size=320,
-                 shuffle=True,
+                 shuffleData=True,
                  augmentations=None,
-                 steps_per_epoch=1000,
                  normalizeImage=True):
         self.ann_fnames = _getAnnotationFiles(dataDirectories)
         self.lable_names = labels
         self.image_size = image_size
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
-        self.shuffle = shuffle
-
-        self.augmentations = None
-        if augmentations:
-            self.augmentations = Compose(augmentations,
-                                         bbox_params=BboxParams(format='pascal_voc', label_fields=['labels'],
-                                                                min_visibility=.8))
-        self.steps_per_epoch = steps_per_epoch
+        self.shuffleData = shuffleData
+        if self.shuffleData:
+            shuffle(self.ann_fnames)
+        self.augmentations = self._composeAugmentations(augmentations)
         self.normalizeImage = normalizeImage
-        self._index = 0
 
-    def next_batch(self):
+    def datasetBatchesCount(self):
+        return math.ceil(len(self.ann_fnames) / self.batch_size)
+
+    def batches(self, nBatches=None):
+        if not nBatches:
+            nBatches = self.datasetBatchesCount()
+        annotations = cycle(self.ann_fnames)
+        for i, batchOfAnnotationsFiles in enumerate(_batchItems(annotations, self.batch_size)):
+            if i+1 == nBatches:
+                break
+            assert i <= nBatches  # защита от дурака
+            yield self._getDatasetItems(batchOfAnnotationsFiles)
+
+    def _getDatasetItems(self, annotations):
         xs = []
         ys_1 = []
         ys_2 = []
         ys_3 = []
-        for _ in range(self.batch_size):
-            x, y1, y2, y3 = self._get()
+        for annotation in annotations:
+            x, y1, y2, y3 = self._getDatasetItem(annotation)
             xs.append(x)
             ys_1.append(y1)
             ys_2.append(y2)
             ys_3.append(y3)
 
-        if self._end_epoch == True:
-            if self.shuffle:
-                shuffle(self.ann_fnames)
-            self._end_epoch = False
-            self._epoch += 1
-
         return np.array(xs).astype(np.float32), np.array(ys_1).astype(np.float32), np.array(ys_2).astype(
             np.float32), np.array(ys_3).astype(np.float32)
 
-    def _get(self):
-
-        # 1. get input file & its annotation
-        annotationFileName = self.ann_fnames[self._index]
-        directory = os.path.split(annotationFileName)[0]
-        fname, boxes, coded_labels = parse_annotation(annotationFileName, directory, self.lable_names)
+    def _getDatasetItem(self, annotationFile):
+        itemDirectory = os.path.split(annotationFile)[0]
+        fname, boxes, coded_labels = parse_annotation(annotationFile, itemDirectory, self.lable_names)
 
         img = cv2.imread(fname)
         img, boxes, coded_labels = self._preprocessInputs(img, boxes, coded_labels)
 
-        # 3. Append ys
-        list_ys = _create_empty_xy(self._net_size, len(self.lable_names))
+        list_ys = _create_empty_xy(self.image_size, len(self.lable_names))
         for original_box, label in zip(boxes, coded_labels):
             max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
 
-            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, self._net_size, self._net_size)
+            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, self.image_size, self.image_size)
             _assign_box(list_ys[scale_index], box_index, _coded_box, label)
-
-        self._index += 1
-        if self._index == self.steps_per_epoch:
-            self._index = 0
-            self._end_epoch = True
 
         return img, list_ys[2], list_ys[1], list_ys[0]
 
     def _preprocessInputs(self, img, boxes, labels):
         img, boxes, labels = self._augment(img, boxes, labels)
         # resize image and boxes, convert BGR to RGB
-        img, boxes = resize_image(img, boxes, self._net_size, self._net_size)
+        img, boxes = resize_image(img, boxes, self.image_size, self.image_size)
         if self.normalizeImage:
             img = _normalize(img)
         return img, boxes, labels
+
+    @staticmethod
+    def _composeAugmentations(augmentations):
+        bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.8)
+        return Compose(augmentations or [], bbox_params=bbox_params)
 
     def _augment(self, image, boxes, labels):
         r = self.augmentations(image=image, bboxes=boxes, labels=labels)
         return r['image'], r['bboxes'], r['labels']
 
-    def _preprocesInputs_OBSOLETE(self, fname, boxes):
-        # 2. read image in fixed size
-        img_augmenter = ImgAugment(self.net_size, self.net_size, False)
-        img, boxes = img_augmenter.imread(fname, boxes)
-        if self.normalizeImage:
-            img = _normalize(img)
-        return img, boxes
+
+def _batchItems(items, size):
+    assert size > 0
+    batch = []
+    for item in items:
+        batch.append(item)
+        if len(batch) == size:
+            yield batch
+            batch = []
+    if len(batch):
+        yield batch
 
 
 def _getAnnotationFiles(dataDirs):

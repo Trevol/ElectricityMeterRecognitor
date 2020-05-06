@@ -6,15 +6,15 @@ from yolo.train import train_fn
 from yolo.config import ConfigParser
 import a3_train.augmentations as augmentations
 
-def createDataGenerator(dataDirs, config, shuffle, augmentations, steps_per_epoch):
+
+def createDataGenerator(dataDirs, config, shuffleData, augmentations):
     return MultiDirectoryBatchGenerator(dataDirs,
                                         labels=config._model_config["labels"],
                                         batch_size=config._train_config["batch_size"],
                                         anchors=config._model_config["anchors"],
                                         image_size=config._model_config["net_size"],
-                                        shuffle=shuffle,
-                                        augmentations=augmentations,
-                                        steps_per_epoch=steps_per_epoch)
+                                        shuffleData=shuffleData,
+                                        augmentations=augmentations)
 
 
 def makeAugmentations():
@@ -41,14 +41,15 @@ def main():
     learning_rate, save_dname, n_epoches = config.get_train_params()
 
     augmentations = makeAugmentations()
-    train_generator = createDataGenerator(trainDataDirs, config, True, augmentations, 1000)
-    valid_generator = createDataGenerator(valDataDirs, config, False, None, None)
+    train_generator = createDataGenerator(trainDataDirs, config, True, augmentations)
+    valid_generator = createDataGenerator(valDataDirs, config, False, None)
     train_fn(model,
              train_generator,
              valid_generator,
              learning_rate=.0001,
              save_dname=save_dname,
-             num_epoches=30)
+             num_epoches=30,
+             stepsPerEpoch=1000)
 
 
 if __name__ == '__main__':

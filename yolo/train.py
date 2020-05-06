@@ -39,8 +39,7 @@ def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches
 
 def _train_epoch(model, optimizer, generator, stepsPerEpoch):
     loss_value = 0
-    for _ in tqdm(range(stepsPerEpoch)):
-        xs, yolo_1, yolo_2, yolo_3 = generator.next_batch()
+    for xs, yolo_1, yolo_2, yolo_3 in tqdm(generator.batches(stepsPerEpoch), 'Training', stepsPerEpoch):
         ys = [yolo_1, yolo_2, yolo_3]
         grads, loss = _grad_fn(model, xs, ys)
         loss_value += loss
@@ -51,10 +50,9 @@ def _train_epoch(model, optimizer, generator, stepsPerEpoch):
 
 def validation_loop(model, generator):
     loss_value = 0
-    batchesCount = generator.batchesCount()
+    batchesCount = generator.datasetBatchesCount()
     assert batchesCount > 0
-    for _ in range(batchesCount):
-        xs, yolo_1, yolo_2, yolo_3 = generator.next_batch()
+    for xs, yolo_1, yolo_2, yolo_3 in tqdm(generator.batches(), 'Validating', batchesCount):
         ys_gt = [yolo_1, yolo_2, yolo_3]
         ys_predicted = model(xs)
         loss_value += loss_fn(ys_gt, ys_predicted)
