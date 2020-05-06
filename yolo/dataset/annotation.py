@@ -23,7 +23,7 @@ def parse_annotation(ann_fname, img_dir, labels_naming=[]):
     return annotation.fname, annotation.boxes, annotation.coded_labels
 
 
-def get_unique_labels(files):
+def __get_unique_labels(files):
     parser = PascalVocXmlParser()
     labels = []
     for fname in files:
@@ -65,7 +65,7 @@ class PascalVocXmlParser(object):
             if 'width' in elem.tag:
                 return int(elem.text)
 
-    def get_height(self, annotation_file):
+    def __get_height(self, annotation_file):
         """
         # Args
             annotation_file : str

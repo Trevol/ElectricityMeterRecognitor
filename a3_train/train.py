@@ -1,18 +1,26 @@
+from albumentations import Compose, BboxParams
+
 import utils.suppressTfWarnings
 from a3_train.MultiDirectoryBatchGenerator import MultiDirectoryBatchGenerator
 from yolo.train import train_fn
 from yolo.config import ConfigParser
 
 
-def createDataGenerator(dataDirs, config, shuffle):
+def createDataGenerator(dataDirs, config, shuffle, augmentations, steps_per_epoch):
     return MultiDirectoryBatchGenerator(dataDirs,
                                         labels=config._model_config["labels"],
                                         batch_size=config._train_config["batch_size"],
                                         anchors=config._model_config["anchors"],
                                         min_net_size=config._train_config["min_size"],
                                         max_net_size=config._train_config["max_size"],
-                                        jitter=config._train_config["jitter"],
-                                        shuffle=shuffle)
+                                        shuffle=shuffle,
+                                        augmentations=augmentations,
+                                        steps_per_epoch=steps_per_epoch)
+
+
+def makeAugmentations():
+    augmentations = []
+    return Compose(augmentations, bbox_params=BboxParams(format='pascal_voc', min_visibility=.8))
 
 
 def main():
@@ -34,8 +42,9 @@ def main():
 
     learning_rate, save_dname, n_epoches = config.get_train_params()
 
-    train_generator = createDataGenerator(trainDataDirs, config, True)
-    valid_generator = createDataGenerator(valDataDirs, config, False)
+    augmentations = makeAugmentations()
+    train_generator = createDataGenerator(trainDataDirs, config, True, augmentations, 1000)
+    valid_generator = createDataGenerator(valDataDirs, config, False, None, None)
     train_fn(model,
              train_generator,
              valid_generator,

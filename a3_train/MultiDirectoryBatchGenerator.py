@@ -2,8 +2,11 @@
 
 import os
 import glob
+
+import cv2
 import numpy as np
 import tensorflow as tf
+from albumentations import Compose, BboxParams
 
 from yolo.dataset.augment import ImgAugment
 from yolo.utils.box import create_anchor_boxes
@@ -11,6 +14,7 @@ from yolo.dataset.annotation import parse_annotation
 from yolo import COCO_ANCHORS
 
 from random import shuffle
+import itertools
 
 # ratio between network input's size and network output's size, 32 for YOLOv3
 DOWNSAMPLE_RATIO = 32
@@ -25,20 +29,26 @@ class MultiDirectoryBatchGenerator(object):
                  anchors=COCO_ANCHORS,
                  min_net_size=320,
                  max_net_size=608,
-                 jitter=True,
-                 shuffle=True):
+                 shuffle=True,
+                 augmentations=None,
+                 steps_per_epoch=1000,
+                 normalizeImage=True):
 
         self.ann_fnames = _getAnnotationFiles(dataDirectories)
         self.lable_names = labels
         self.min_net_size = (min_net_size // DOWNSAMPLE_RATIO) * DOWNSAMPLE_RATIO
         self.max_net_size = (max_net_size // DOWNSAMPLE_RATIO) * DOWNSAMPLE_RATIO
-        self.jitter = jitter
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-        self.steps_per_epoch = int(len(self.ann_fnames) / batch_size)
-
+        self.augmentations = None
+        if augmentations:
+            self.augmentations = Compose(augmentations,
+                                         bbox_params=BboxParams(format='pascal_voc', label_fields=['labels'],
+                                                                min_visibility=.8))
+        self.steps_per_epoch = steps_per_epoch
+        self.normalizeImage = normalizeImage
         self._epoch = 0
         self._end_epoch = False
         self._index = 0
@@ -89,31 +99,41 @@ class MultiDirectoryBatchGenerator(object):
         fname, boxes, coded_labels = parse_annotation(annotationFileName, directory, self.lable_names)
 
         # 2. read image in fixed size
-        img_augmenter = ImgAugment(net_size, net_size, self.jitter)
+        img_augmenter = ImgAugment(net_size, net_size, False)
         img, boxes_ = img_augmenter.imread(fname, boxes)
+        # img, boxes, coded_labels = self._augment(cv2.imread(fname), boxes, coded_labels)
 
         # 3. Append ys
         list_ys = _create_empty_xy(net_size, len(self.lable_names))
-        for original_box, label in zip(boxes_, coded_labels):
+        for original_box, label in zip(boxes, coded_labels):
             max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
 
             _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, net_size, net_size)
             _assign_box(list_ys[scale_index], box_index, _coded_box, label)
 
         self._index += 1
-        if self._index == len(self.ann_fnames):
+        if self._index == self.steps_per_epoch:
             self._index = 0
             self._end_epoch = True
+        if self.normalizeImage:
+            img = _normalize(img)
+        return img, list_ys[2], list_ys[1], list_ys[0]
 
-        return _normalize(img), list_ys[2], list_ys[1], list_ys[0]
+    def _augment(self, image, boxes, labels):
+        r = self.augmentations(image=image, bboxes=boxes, labels=labels)
+        return r['image'], r['bboxes'], r['labels']
 
 
 def _getAnnotationFiles(dataDirs):
-    annotationFiles = []
-    for dataDir in dataDirs:
-        xmlFilesInDataDir = glob.glob(os.path.join(dataDir, "*.xml"))
-        annotationFiles.extend(xmlFilesInDataDir)
-    return annotationFiles
+    # annotationFiles = []
+    # for dataDir in dataDirs:
+    #     xmlFilesInDataDir = glob.glob(os.path.join(dataDir, "*.xml"))
+    #     annotationFiles.extend(xmlFilesInDataDir)
+
+    filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
+    annotationFiles = itertools.chain.from_iterable(filesByDir)
+
+    return sorted(annotationFiles)
 
 
 def _create_empty_xy(net_size, n_classes, n_boxes=3):

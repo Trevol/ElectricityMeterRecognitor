@@ -6,4 +6,5 @@ tensorflow
 tqdm
 sklearn
 imgaug
+albumentations
 imutils
