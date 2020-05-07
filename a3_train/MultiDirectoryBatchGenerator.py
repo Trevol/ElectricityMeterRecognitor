@@ -32,6 +32,7 @@ class MultiDirectoryBatchGenerator(object):
                  augmentations=None,
                  normalizeImage=True):
         self.annotationObjects = AnnotationObject.loadFromDirectories(dataDirectories, labelNames, shuffleData)
+        self._numOfLabels = len(labelNames)
         self.image_size = image_size
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
@@ -68,7 +69,7 @@ class MultiDirectoryBatchGenerator(object):
         img = cv2.imread(imageFile)
         img, boxes, coded_labels = self._preprocessInputs(img, boxes, coded_labels)
 
-        list_ys = _create_empty_xy(self.image_size, len(coded_labels))
+        list_ys = _create_empty_xy(self.image_size, self._numOfLabels)
         for original_box, label in zip(boxes, coded_labels):
             max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
 
@@ -200,3 +201,47 @@ def _assign_box(yolo, box_index, box, label):
 
 def _normalize(image):
     return image / 255.
+
+
+if __name__ == '__main__':
+    def test():
+        from tqdm import tqdm
+        import utils.suppressTfWarnings
+        from a3_train.train import makeAugmentations
+        from utils import imshow
+        from yolo.config import ConfigParser
+        import numpy as np
+        import cv2
+
+        def createGenerator(dataDirs, config, shuffleData, augmentations):
+            return MultiDirectoryBatchGenerator(dataDirs,
+                                                labelNames=config._model_config["labels"],
+                                                batch_size=config._train_config["batch_size"],
+                                                anchors=config._model_config["anchors"],
+                                                image_size=config._model_config["net_size"],
+                                                shuffleData=shuffleData,
+                                                augmentations=augmentations)
+
+        dataDirs = [
+            # '/hdd/Datasets/counters/0_from_internet/train',
+            '/hdd/Datasets/counters/1_from_phone/train',
+            '/hdd/Datasets/counters/2_from_phone/train'
+        ]
+        config = ConfigParser("configs/counters.json")
+        gen = createGenerator(dataDirs, config, shuffleData=False, augmentations=makeAugmentations())
+        # gen = createDataGenerator(dataDirs, config, shuffleData=False, augmentations=None)
+        gen.normalizeImage = False
+        gen.batch_size = 2
+
+        steps_per_epoch = 111
+
+        batches = gen.batches(steps_per_epoch)
+        for inputs, dd1, dd2, dd3 in tqdm(batches, total=steps_per_epoch):
+            for img in inputs:
+                img = np.uint8(img)
+                # imshow(img=img[..., ::-1])
+                # if cv2.waitKey() == 27:
+                #     return
+
+
+    test()
