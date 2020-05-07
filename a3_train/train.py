@@ -17,10 +17,6 @@ def createDataGenerator(dataDirs, config, shuffleData, augmentations):
                                         augmentations=augmentations)
 
 
-def makeAugmentations():
-    return Compose(augmentations.make(), bbox_params=BboxParams(format='pascal_voc', min_visibility=.8))
-
-
 def main():
     configFile = "configs/counters.json"
     config = ConfigParser(configFile)
@@ -40,8 +36,8 @@ def main():
 
     learning_rate, save_dname, n_epoches = config.get_train_params()
 
-    augmentations = makeAugmentations()
-    train_generator = createDataGenerator(trainDataDirs, config, True, augmentations)
+    augments = augmentations.make()
+    train_generator = createDataGenerator(trainDataDirs, config, True, augments)
     valid_generator = createDataGenerator(valDataDirs, config, False, None)
     train_fn(model,
              train_generator,

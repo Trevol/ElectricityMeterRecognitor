@@ -12,7 +12,7 @@ import os
 def main():
     # imagesPattern = '/hdd/Datasets/counters/1_from_phone/1_all_downsized/*.jpg'
     # imagesPattern = '/hdd/Datasets/counters/2_from_phone/val/*.jpg'
-    imagesPattern = '/hdd/Datasets/counters/1_from_phone/val/*.jpg'
+    # imagesPattern = '/hdd/Datasets/counters/1_from_phone/val/*.jpg'
     imagesPattern = '/hdd/Datasets/counters/3_from_phone/*.jpg'
 
     configFile = "configs/counters.json"

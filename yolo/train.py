@@ -13,7 +13,7 @@ def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches
 
     history = []
     for i in range(num_epoches):
-
+        print(f'\n{i}-th epoch...')
         # 1. update params
         train_loss = _train_epoch(model, optimizer, train_generator, stepsPerEpoch)
 
@@ -23,13 +23,13 @@ def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches
             loss_value = valid_loss
         else:
             loss_value = train_loss
-        info = f"{i}-th loss = {loss_value}, train_loss = {train_loss}"
+        info = f"\n{i}-th loss = {loss_value}, train_loss = {train_loss}"
         print(info)
 
         # 3. update weights
         history.append(loss_value)
         if save_fname is not None and loss_value <= min(history):
-            print("    update weight {}".format(loss_value))
+            print("  update weight {}".format(loss_value))
             model.save_weights(f"{save_fname}.h5")
             with open(f"{save_fname}.txt", "wt") as f:
                 f.write(info)
@@ -39,13 +39,18 @@ def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches
 
 def _train_epoch(model, optimizer, generator, stepsPerEpoch):
     loss_value = 0
-    for xs, yolo_1, yolo_2, yolo_3 in tqdm(generator.batches(stepsPerEpoch), 'Training', stepsPerEpoch):
+    desc = 'Training'
+    avgLoss = 0.
+    iterations = tqdm(generator.batches(stepsPerEpoch), desc, stepsPerEpoch)
+    for i, (xs, yolo_1, yolo_2, yolo_3) in enumerate(iterations):
         ys = [yolo_1, yolo_2, yolo_3]
         grads, loss = _grad_fn(model, xs, ys)
         loss_value += loss
         optimizer.apply_gradients(zip(grads, model.variables))
-    loss_value /= stepsPerEpoch
-    return loss_value
+        avgLoss = loss_value / (i + 1)
+        iterations.set_description(f'{desc}. Curr. loss: {loss:.6f}, Avg. loss: {avgLoss:.6f}')
+    # avgLoss = loss_value / stepsPerEpoch
+    return avgLoss
 
 
 def validation_loop(model, generator):

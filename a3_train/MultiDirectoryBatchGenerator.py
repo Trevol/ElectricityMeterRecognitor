@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from albumentations import Compose, BboxParams
 
-from utils.iter_utils import batchItems
+from utils.iter_utils import batchItems, unzip
 from yolo.dataset.augment import resize_image
 from yolo.utils.box import create_anchor_boxes
 from yolo.dataset.annotation import parse_annotation
@@ -113,8 +113,16 @@ class AnnotationObject:
         if self._initialized:
             return
         itemDir = os.path.split(self._annFile)[0]
-        self._imageFile, self._boxes, self._labels = parse_annotation(self._annFile, itemDir, self.labelNames)
+        self._imageFile, self._boxes, self._labels = self._parseAnnotation(self._annFile, self.labelNames)
         self._initialized = True
+
+    @staticmethod
+    def _parseAnnotation(annFile, labelNames):
+        itemDir = os.path.split(annFile)[0]
+        imageFile, boxes, labels = parse_annotation(annFile, itemDir, labelNames)
+        # preserve only desired objects (boxes with required labels)
+        boxes, labels = unzip((b, l) for b, l in zip(boxes, labels) if l > -1)
+        return imageFile, boxes, labels
 
     @classmethod
     def loadFromDirectories(cls, dataDirs, labelNames, shuffleData):
@@ -207,11 +215,11 @@ if __name__ == '__main__':
     def test():
         from tqdm import tqdm
         import utils.suppressTfWarnings
-        from a3_train.train import makeAugmentations
         from utils import imshow
         from yolo.config import ConfigParser
         import numpy as np
         import cv2
+        import a3_train.augmentations as augmentations
 
         def createGenerator(dataDirs, config, shuffleData, augmentations):
             return MultiDirectoryBatchGenerator(dataDirs,
@@ -228,7 +236,7 @@ if __name__ == '__main__':
             '/hdd/Datasets/counters/2_from_phone/train'
         ]
         config = ConfigParser("configs/counters.json")
-        gen = createGenerator(dataDirs, config, shuffleData=False, augmentations=makeAugmentations())
+        gen = createGenerator(dataDirs, config, shuffleData=False, augmentations=augmentations.make())
         # gen = createDataGenerator(dataDirs, config, shuffleData=False, augmentations=None)
         gen.normalizeImage = False
         gen.batch_size = 2
@@ -239,9 +247,9 @@ if __name__ == '__main__':
         for inputs, dd1, dd2, dd3 in tqdm(batches, total=steps_per_epoch):
             for img in inputs:
                 img = np.uint8(img)
-                # imshow(img=img[..., ::-1])
-                # if cv2.waitKey() == 27:
-                #     return
+                imshow(img=img[..., ::-1])
+                if cv2.waitKey() == 27:
+                    return
 
 
     test()
