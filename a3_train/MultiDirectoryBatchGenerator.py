@@ -30,14 +30,11 @@ class MultiDirectoryBatchGenerator(object):
                  shuffleData=True,
                  augmentations=None,
                  normalizeImage=True):
-        self.ann_fnames = _getAnnotationFiles(dataDirectories)
+        self.ann_fnames = _getAnnotationFiles(dataDirectories, shuffleData)
         self.lable_names = labels
         self.image_size = image_size
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
-        self.shuffleData = shuffleData
-        if self.shuffleData:
-            shuffle(self.ann_fnames)
         self.augmentations = self._composeAugmentations(augmentations)
         self.normalizeImage = normalizeImage
 
@@ -48,11 +45,8 @@ class MultiDirectoryBatchGenerator(object):
         if not nBatches:
             nBatches = self.datasetBatchesCount()
         annotations = cycle(self.ann_fnames)
-        for i, batchOfAnnotationsFiles in enumerate(_batchItems(annotations, self.batch_size)):
-            if i+1 == nBatches:
-                break
-            assert i <= nBatches  # защита от дурака
-            yield self._getDatasetItems(batchOfAnnotationsFiles)
+        annBatches = _batchItems(annotations, self.batch_size, nBatches)
+        return (self._getDatasetItems(bb) for bb in annBatches)
 
     def _getDatasetItems(self, annotations):
         xs = []
@@ -103,22 +97,32 @@ class MultiDirectoryBatchGenerator(object):
         return r['image'], r['bboxes'], r['labels']
 
 
-def _batchItems(items, size):
+def _batchItems(items, size, maxBatches=None):
     assert size > 0
+    maxBatches = maxBatches or math.inf
     batch = []
+    batchCounter = 0
     for item in items:
         batch.append(item)
         if len(batch) == size:
             yield batch
+            batchCounter += 1
             batch = []
+            if batchCounter >= maxBatches:
+                return
     if len(batch):
         yield batch
 
 
-def _getAnnotationFiles(dataDirs):
+def _getAnnotationFiles(dataDirs, shuffleData):
     filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
     annotationFiles = itertools.chain.from_iterable(filesByDir)
-    return sorted(annotationFiles)
+    if shuffleData:
+        annotationFiles = list(annotationFiles)
+        shuffle(annotationFiles)
+        return annotationFiles
+    else:
+        return sorted(annotationFiles)
 
 
 def _create_empty_xy(net_size, n_classes, n_boxes=3):
