@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from albumentations import Compose, BboxParams
 
+from utils.iter_utils import batchItems
 from yolo.dataset.augment import resize_image
 from yolo.utils.box import create_anchor_boxes
 from yolo.dataset.annotation import parse_annotation
@@ -23,15 +24,14 @@ DOWNSAMPLE_RATIO = 32
 class MultiDirectoryBatchGenerator(object):
     def __init__(self,
                  dataDirectories,
-                 labels,
+                 labelNames,
                  batch_size,
                  anchors=COCO_ANCHORS,
                  image_size=320,
                  shuffleData=True,
                  augmentations=None,
                  normalizeImage=True):
-        self.ann_fnames = _getAnnotationFiles(dataDirectories, shuffleData)
-        self.lable_names = labels
+        self.annotationObjects = AnnotationObject.loadFromDirectories(dataDirectories, labelNames, shuffleData)
         self.image_size = image_size
         self.anchors = create_anchor_boxes(anchors)
         self.batch_size = batch_size
@@ -39,38 +39,36 @@ class MultiDirectoryBatchGenerator(object):
         self.normalizeImage = normalizeImage
 
     def datasetBatchesCount(self):
-        return math.ceil(len(self.ann_fnames) / self.batch_size)
+        return math.ceil(len(self.annotationObjects) / self.batch_size)
 
     def batches(self, nBatches=None):
         if not nBatches:
             nBatches = self.datasetBatchesCount()
-        annotations = cycle(self.ann_fnames)
-        annBatches = _batchItems(annotations, self.batch_size, nBatches)
-        return (self._getDatasetItems(bb) for bb in annBatches)
+        annotationObjects = cycle(self.annotationObjects)
+        annObjBatches = batchItems(annotationObjects, self.batch_size, nBatches)
+        return (self._getDatasetItems(annObjBatch) for annObjBatch in annObjBatches)
 
-    def _getDatasetItems(self, annotations):
+    def _getDatasetItems(self, annotationObjects):
         xs = []
         ys_1 = []
         ys_2 = []
         ys_3 = []
-        for annotation in annotations:
-            x, y1, y2, y3 = self._getDatasetItem(annotation)
+        for annotationObj in annotationObjects:
+            x, y1, y2, y3 = self._getDatasetItem(annotationObj)
             xs.append(x)
             ys_1.append(y1)
             ys_2.append(y2)
             ys_3.append(y3)
 
-        return np.array(xs).astype(np.float32), np.array(ys_1).astype(np.float32), np.array(ys_2).astype(
-            np.float32), np.array(ys_3).astype(np.float32)
+        return np.float32(xs), np.float32(ys_1), np.float32(ys_2), np.float32(ys_3)
 
-    def _getDatasetItem(self, annotationFile):
-        itemDirectory = os.path.split(annotationFile)[0]
-        fname, boxes, coded_labels = parse_annotation(annotationFile, itemDirectory, self.lable_names)
+    def _getDatasetItem(self, annotationObject):
+        imageFile, boxes, coded_labels = annotationObject.annotationData()
 
-        img = cv2.imread(fname)
+        img = cv2.imread(imageFile)
         img, boxes, coded_labels = self._preprocessInputs(img, boxes, coded_labels)
 
-        list_ys = _create_empty_xy(self.image_size, len(self.lable_names))
+        list_ys = _create_empty_xy(self.image_size, len(coded_labels))
         for original_box, label in zip(boxes, coded_labels):
             max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
 
@@ -87,42 +85,51 @@ class MultiDirectoryBatchGenerator(object):
             img = _normalize(img)
         return img, boxes, labels
 
+    def _augment(self, image, boxes, labels):
+        r = self.augmentations(image=image, bboxes=boxes, labels=labels)
+        return r['image'], r['bboxes'], r['labels']
+
     @staticmethod
     def _composeAugmentations(augmentations):
         bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.8)
         return Compose(augmentations or [], bbox_params=bbox_params)
 
-    def _augment(self, image, boxes, labels):
-        r = self.augmentations(image=image, bboxes=boxes, labels=labels)
-        return r['image'], r['bboxes'], r['labels']
 
+class AnnotationObject:
+    def __init__(self, annFile, labelNames):
+        self._annFile = annFile
+        self.labelNames = labelNames
+        self._imageFile = None
+        self._boxes = None
+        self._labels = None
+        self._initialized = False
 
-def _batchItems(items, size, maxBatches=None):
-    assert size > 0
-    maxBatches = maxBatches or math.inf
-    batch = []
-    batchCounter = 0
-    for item in items:
-        batch.append(item)
-        if len(batch) == size:
-            yield batch
-            batchCounter += 1
-            batch = []
-            if batchCounter >= maxBatches:
-                return
-    if len(batch):
-        yield batch
+    def annotationData(self):
+        self._initialize()
+        return self._imageFile, self._boxes, self._labels
 
+    def _initialize(self):
+        if self._initialized:
+            return
+        itemDir = os.path.split(self._annFile)[0]
+        self._imageFile, self._boxes, self._labels = parse_annotation(self._annFile, itemDir, self.labelNames)
+        self._initialized = True
 
-def _getAnnotationFiles(dataDirs, shuffleData):
-    filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
-    annotationFiles = itertools.chain.from_iterable(filesByDir)
-    if shuffleData:
-        annotationFiles = list(annotationFiles)
-        shuffle(annotationFiles)
-        return annotationFiles
-    else:
-        return sorted(annotationFiles)
+    @classmethod
+    def loadFromDirectories(cls, dataDirs, labelNames, shuffleData):
+        annotationFiles = cls._loadAnnotationFiles(dataDirs, shuffleData)
+        return [cls(f, labelNames) for f in annotationFiles]
+
+    @staticmethod
+    def _loadAnnotationFiles(dataDirs, shuffleData):
+        filesByDir = (glob.glob(os.path.join(dataDir, '*.xml')) for dataDir in dataDirs)
+        annotationFiles = itertools.chain.from_iterable(filesByDir)
+        if shuffleData:
+            annotationFiles = list(annotationFiles)
+            shuffle(annotationFiles)
+            return annotationFiles
+        else:
+            return sorted(annotationFiles)
 
 
 def _create_empty_xy(net_size, n_classes, n_boxes=3):

@@ -9,7 +9,7 @@ import a3_train.augmentations as augmentations
 
 def createDataGenerator(dataDirs, config, shuffleData, augmentations):
     return MultiDirectoryBatchGenerator(dataDirs,
-                                        labels=config._model_config["labels"],
+                                        labelNames=config._model_config["labels"],
                                         batch_size=config._train_config["batch_size"],
                                         anchors=config._model_config["anchors"],
                                         image_size=config._model_config["net_size"],

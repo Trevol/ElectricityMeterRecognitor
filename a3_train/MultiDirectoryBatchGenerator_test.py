@@ -26,9 +26,9 @@ def main():
     for inputs, dd1, dd2, dd3 in tqdm(batches, total=steps_per_epoch):
         for img in inputs:
             img = np.uint8(img)
-            imshow(img=img[..., ::-1])
-            if cv2.waitKey() == 27:
-                return
+            # imshow(img=img[..., ::-1])
+            # if cv2.waitKey() == 27:
+            #     return
 
 
 main()
