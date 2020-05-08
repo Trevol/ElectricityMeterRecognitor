@@ -7,8 +7,9 @@ from tqdm import tqdm
 from yolo.loss import loss_fn
 
 
-def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches, stepsPerEpoch, save_dname=None):
-    save_fname = _setup(save_dname)
+def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches, stepsPerEpoch, saveDir=None,
+             saveAll=False):
+    saveFile = _setup(saveDir)
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     history = []
@@ -28,10 +29,10 @@ def train_fn(model, train_generator, valid_generator, learning_rate, num_epoches
 
         # 3. update weights
         history.append(loss_value)
-        if save_fname is not None and loss_value <= min(history):
+        if saveFile and loss_value <= min(history):
             print("  update weight {}".format(loss_value))
-            model.save_weights(f"{save_fname}.h5")
-            with open(f"{save_fname}.txt", "wt") as f:
+            model.save_weights(f"{saveFile}_{i}_{loss_value:.3f}.h5")
+            with open(f"{saveFile}.txt", "wt") as f:
                 f.write(info)
 
     return history

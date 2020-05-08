@@ -5,7 +5,7 @@
         "net_size":               416
     },
     "pretrained" : {
-        "keras_format":             "../a3_train/weights/backup/4_from_scratch_ONE_label/weights.h5",
+        "keras_format":             "../a3_train/weights/backup/5_from_pretrained_ONE_label/weights.h5",
         "darknet_format":           ""
     },
     "train" : {

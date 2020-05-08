@@ -34,7 +34,7 @@ def main():
 
     model = config.create_model()
 
-    learning_rate, save_dname, n_epoches = config.get_train_params()
+    learning_rate, saveDir, n_epoches = config.get_train_params()
 
     augments = augmentations.make()
     train_generator = createDataGenerator(trainDataDirs, config, True, augments)
@@ -42,8 +42,8 @@ def main():
     train_fn(model,
              train_generator,
              valid_generator,
-             learning_rate=.00005,
-             save_dname=save_dname,
+             learning_rate=.0005,
+             saveDir=saveDir,
              num_epoches=30,
              stepsPerEpoch=1000)
 
