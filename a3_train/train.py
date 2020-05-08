@@ -1,7 +1,7 @@
 from albumentations import Compose, BboxParams
 
 import utils.suppressTfWarnings
-from a3_train.MultiDirectoryBatchGenerator import MultiDirectoryBatchGenerator
+from utils.MultiDirectoryBatchGenerator import MultiDirectoryBatchGenerator
 from yolo.train import train_fn
 from yolo.config import ConfigParser
 import a3_train.augmentations as augmentations
@@ -18,7 +18,7 @@ def createDataGenerator(dataDirs, config, shuffleData, augmentations):
 
 
 def main():
-    configFile = "configs/counters.json"
+    configFile = "configs/counters_screens.json"
     config = ConfigParser(configFile)
 
     trainDataDirs = [
@@ -42,7 +42,7 @@ def main():
     train_fn(model,
              train_generator,
              valid_generator,
-             learning_rate=.0001,
+             learning_rate=.00005,
              save_dname=save_dname,
              num_epoches=30,
              stepsPerEpoch=1000)

@@ -1,0 +1,24 @@
+{
+    "model" : {
+        "anchors":              [10,13, 16,30, 33,23, 30,61, 62,45, 59,119, 116,90, 156,198, 373,326],
+        "labels":               ["counter_screen"],
+        "net_size":               416
+    },
+    "pretrained" : {
+        "keras_format":             "../a3_train/weights/backup/4_from_scratch_ONE_label/weights.h5",
+        "darknet_format":           ""
+    },
+    "train" : {
+        "min_size":             416,
+        "max_size":             416,
+        "num_epoch":            150,
+        "train_image_folder":   "/hdd/Datasets/counters/train",
+        "train_annot_folder":   "/hdd/Datasets/counters/train",
+        "valid_image_folder":   "/hdd/Datasets/counters/val",
+        "valid_annot_folder":   "/hdd/Datasets/counters/val",
+        "batch_size":           8,
+        "learning_rate":        1e-4,
+        "save_folder":         "weights",
+        "jitter":               false
+    }
+}

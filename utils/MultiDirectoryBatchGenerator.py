@@ -235,7 +235,7 @@ if __name__ == '__main__':
             '/hdd/Datasets/counters/1_from_phone/train',
             '/hdd/Datasets/counters/2_from_phone/train'
         ]
-        config = ConfigParser("configs/counters.json")
+        config = ConfigParser("configs/counters_screens.json")
         gen = createGenerator(dataDirs, config, shuffleData=False, augmentations=augmentations.make())
         # gen = createDataGenerator(dataDirs, config, shuffleData=False, augmentations=None)
         gen.normalizeImage = False

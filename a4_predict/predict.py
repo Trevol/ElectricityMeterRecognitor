@@ -15,7 +15,7 @@ def main():
     imagesPattern = '/hdd/Datasets/counters/1_from_phone/val/*.jpg'
     # imagesPattern = '/hdd/Datasets/counters/3_from_phone/*.jpg'
 
-    configFile = "configs/counters.json"
+    configFile = "configs/counters_screens.json"
 
     config_parser = ConfigParser(configFile)
     model = config_parser.create_model(skip_detect_layer=False)
