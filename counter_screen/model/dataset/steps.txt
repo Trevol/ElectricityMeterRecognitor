@@ -4,9 +4,6 @@
    - https://bt.rozetka.com.ua/schetchiki-elektroenergii/c3846596/
    - https://www.vseinstrumenti.ru/electrika_i_svet/uchet_i_kontrol/schetchiki_elektroenergii/
    - make crawler for shops (rozetka etc) (like https://github.com/Trevol/Image-Downloader for google/bing)
-- make images backup
-- remove garbage (manually)
-- run rename_to_sequential.py
 
 
 - collect photos/videos by phone
