@@ -1,0 +1,3 @@
+https://towardsdatascience.com/yolo-v3-object-detection-53fb7d3bfe6b  What’s new in YOLO v3?
+https://blog.paperspace.com/how-to-implement-a-yolo-object-detector-in-pytorch/
+google "yolo input image size"

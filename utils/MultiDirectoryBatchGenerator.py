@@ -67,18 +67,22 @@ class MultiDirectoryBatchGenerator(object):
         imageFile, boxes, coded_labels = annotationObject.annotationData()
 
         img = cv2.imread(imageFile)
-        img, boxes, coded_labels = self._preprocessInputs(img, boxes, coded_labels)
+        img, boxes, coded_labels = self._augment_resize_normalize_inputs(img, boxes, coded_labels)
+        y1, y2, y3 = self._to_yolo_format(boxes, coded_labels, self.image_size, self._numOfLabels, self.anchors)
+        return img, y1, y2, y3
 
-        list_ys = _create_empty_xy(self.image_size, self._numOfLabels)
-        for original_box, label in zip(boxes, coded_labels):
-            max_anchor, scale_index, box_index = _find_match_anchor(original_box, self.anchors)
+    @staticmethod
+    def _to_yolo_format(boxes, labels, net_size, nClasses, anchorBoxes):
+        list_ys = _create_empty_xy(net_size, nClasses)
+        for original_box, label in zip(boxes, labels):
+            max_anchor, scale_index, box_index = _find_match_anchor(original_box, anchorBoxes)
 
-            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, self.image_size, self.image_size)
+            _coded_box = _encode_box(list_ys[scale_index], original_box, max_anchor, net_size, net_size)
             _assign_box(list_ys[scale_index], box_index, _coded_box, label)
 
-        return img, list_ys[2], list_ys[1], list_ys[0]
+        return list_ys[2], list_ys[1], list_ys[0]
 
-    def _preprocessInputs(self, img, boxes, labels):
+    def _augment_resize_normalize_inputs(self, img, boxes, labels):
         img, boxes, labels = self._augment(img, boxes, labels)
         # resize image and boxes, convert BGR to RGB
         img, boxes = resize_image(img, boxes, self.image_size, self.image_size)
@@ -219,14 +223,17 @@ if __name__ == '__main__':
         from yolo.config import ConfigParser
         import numpy as np
         import cv2
-        import a3_train.augmentations as augmentations
+        import utils.augmentations as augmentations
 
-        def createGenerator(dataDirs, config, shuffleData, augmentations):
+        def createGenerator(dataDirs, shuffleData, augmentations):
+            labelNames = ["counter", "counter_screen"]
+            anchors = [10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326]
+            net_size = 416
             return MultiDirectoryBatchGenerator(dataDirs,
-                                                labelNames=config._model_config["labels"],
-                                                batch_size=config._train_config["batch_size"],
-                                                anchors=config._model_config["anchors"],
-                                                image_size=config._model_config["net_size"],
+                                                labelNames=labelNames,
+                                                batch_size=8,
+                                                anchors=anchors,
+                                                image_size=net_size,
                                                 shuffleData=shuffleData,
                                                 augmentations=augmentations)
 
@@ -235,8 +242,7 @@ if __name__ == '__main__':
             '/hdd/Datasets/counters/1_from_phone/train',
             '/hdd/Datasets/counters/2_from_phone/train'
         ]
-        config = ConfigParser("configs/counters_screens.json")
-        gen = createGenerator(dataDirs, config, shuffleData=False, augmentations=augmentations.make())
+        gen = createGenerator(dataDirs, shuffleData=False, augmentations=augmentations.make())
         # gen = createDataGenerator(dataDirs, config, shuffleData=False, augmentations=None)
         gen.normalizeImage = False
         gen.batch_size = 2
@@ -246,8 +252,7 @@ if __name__ == '__main__':
         batches = gen.batches(steps_per_epoch)
         for inputs, dd1, dd2, dd3 in tqdm(batches, total=steps_per_epoch):
             for img in inputs:
-                img = np.uint8(img)
-                imshow(img=img[..., ::-1])
+                imshow(img=np.uint8(img[..., ::-1]))
                 if cv2.waitKey() == 27:
                     return
 
