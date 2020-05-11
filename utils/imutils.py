@@ -14,6 +14,11 @@ def imshow(*unnamedMat, **namedMat):
             cv2.setWindowTitle(name, str(title))
 
 
+def imshowWait(*unnamedMat, **namedMat):
+    imshow(*unnamedMat, **namedMat)
+    return cv2.waitKey()
+
+
 def fit_image_to_shape(image, dstShape):
     dstH, dstW = dstShape
     imageH, imageW = image.shape[:2]

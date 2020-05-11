@@ -2,3 +2,9 @@ Dataset generation
 https://github.com/z-a-f/not_notMNIST
 https://github.com/Trevol/not_notMNIST
 https://github.com/Trevol/not_notMNIST/tree/master/Demo/Numeric/28x28
+
+See comments here (some architectures described)
+http://yaroslavvb.blogspot.com/2011/09/notmnist-dataset.html
+
+resnet18 image classification
+Pytorch?

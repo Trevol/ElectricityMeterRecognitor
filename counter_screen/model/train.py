@@ -1,5 +1,5 @@
 import utils.suppressTfWarnings
-from counter_screen.CounterScreenModel import CounterScreenModel
+from counter_screen.model.CounterScreenModel import CounterScreenModel
 from utils.MultiDirectoryBatchGenerator import MultiDirectoryBatchGenerator
 from yolo.train import train_fn
 import utils.augmentations as augmentations

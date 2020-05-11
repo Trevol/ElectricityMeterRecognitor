@@ -1,3 +1,7 @@
 Quantization:
 - https://github.com/z-a-f/quantization_benchmarks
 - https://pytorch.org/tutorials/intermediate/quantized_transfer_learning_tutorial.html
+
+goggle "compile yolo for android"
+https://www.youtube.com/watch?v=JasVghcUeyg Run YOLOv3 on Android with OpenCV (Custom Trained YOLO too) || Android Deep Learning with OpenCV #6
+https://www.youtube.com/watch?v=lGtUA5wz0tk Let's Build an Android AI App with OpenCV (+put YOLOv3 there) || Android Deep Learning with OpenCV#1
