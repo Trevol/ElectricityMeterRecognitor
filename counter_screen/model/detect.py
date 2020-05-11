@@ -12,7 +12,7 @@ def main():
     imagesPattern = '/hdd/Datasets/counters/1_from_phone/val/*.jpg'
     imagesPattern = '/hdd/Datasets/counters/3_from_phone/*.jpg'
 
-    detector = CounterScreenModel('weights/backup/3_from_scratch/weights.h5')
+    detector = CounterScreenModel('weights/2_from_scratch/weights.h5')
 
     for image_path in sorted(glob(imagesPattern)):
         if os.path.splitext(image_path)[1] == '.xml':

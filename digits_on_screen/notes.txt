@@ -1,0 +1,4 @@
+Dataset generation
+https://github.com/z-a-f/not_notMNIST
+https://github.com/Trevol/not_notMNIST
+https://github.com/Trevol/not_notMNIST/tree/master/Demo/Numeric/28x28

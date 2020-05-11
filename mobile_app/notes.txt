@@ -1,0 +1,3 @@
+Quantization:
+- https://github.com/z-a-f/quantization_benchmarks
+- https://pytorch.org/tutorials/intermediate/quantized_transfer_learning_tutorial.html

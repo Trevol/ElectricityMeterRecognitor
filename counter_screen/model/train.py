@@ -51,7 +51,7 @@ class CounterScreenModelTraining:
 
 
 def main():
-    model = CounterScreenModel('weights/backup/3_from_scratch/weights.h5')
+    model = CounterScreenModel('weights/2_from_scratch/weights.h5')
     trainParams = dict(
         trainDataDirs=[
             # './dataset/counters/0_from_internet/train',
