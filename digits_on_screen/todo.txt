@@ -1,0 +1,11 @@
+- padding for generated image
+  - middlePad
+- calculate bboxes
+- augment
+  - Perspective transform
+  - other augmentations
+- pad with zeroes to net_size
+- train NumberDetector
+
+
+++++ invert (white digits on black BG)
