@@ -103,27 +103,27 @@ def fill(shape, fillValue, dtype=np.uint8):
 
 
 def hStack(images, padding: Tuple[int, int, int], fillValue=0):
-    assert len(images)
     h = imHeight(images[0])
     channels = imChannels(images[0])
     hPadding, vPadding, mPadding = padding
 
     hPadder = fill((h, hPadding) + channels, fillValue)
     mPadder = fill((h, mPadding) + channels, fillValue)
-    imagesBoxes = []
+    boxes = []
 
     parts = [hPadder]
-    for image, m in zip_longest(images, repeat(mPadder, len(images) - 1)):
+    x1, y1 = hPadding, vPadding
+    for image, middlePad in zip_longest(images, repeat(True, len(images) - 1)):
         parts.append(image)
-        if m is not None:
-            parts.append(m)
-        raise NotImplementedError("box calculation")
-        box = (1, 1, 1, 1)
-        imagesBoxes.append(box)
+        x2, y2 = x1 + imWidth(image), y1 + imHeight(image)
+        boxes.append((x1, y1, x2, y2))
+        if middlePad:
+            parts.append(mPadder)
+            x1 += imWidth(image) + mPadding
     parts.append(hPadder)
     hStackedImage = np.hstack(parts)
 
     vPadder = fill((vPadding, imWidth(hStackedImage)) + channels, fillValue)
 
     resultImage = np.vstack([vPadder, hStackedImage, vPadder])
-    return resultImage, imagesBoxes
+    return resultImage, boxes

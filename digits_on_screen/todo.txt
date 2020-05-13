@@ -1,11 +1,12 @@
-- padding for generated image
-  - middlePad
-- calculate bboxes
++++ padding (h, v, middle) for generated image
++++ calculate bboxes
+- augmentations
+ - with boxes
+  +++ Perspective transform
+  +++ other augmentations
+  +++ check noise augmentations
 - convert to Yolo input format
-- augment
-  - Perspective transform
-  - other augmentations
-  - check noise augmentations
+- DEBUG_MODE on/off
 - pad with zeroes to net_size
 - train NumberDetector
 

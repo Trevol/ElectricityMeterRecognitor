@@ -8,9 +8,10 @@ from utils.iter_utils import unzip
 
 
 def main():
-    m = list(repeat(True, -1))
-    print(m)
-    z = zip_longest([1, 2], [1], fillvalue=False)
-    print(list(z))
+    def op(arg):
+        print('Op!!!', arg)
+    True and op(1)
+    False and op(2)
+    None and op(1)
 
 main()
