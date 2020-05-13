@@ -1,9 +1,11 @@
 - padding for generated image
   - middlePad
 - calculate bboxes
+- convert to Yolo input format
 - augment
   - Perspective transform
   - other augmentations
+  - check noise augmentations
 - pad with zeroes to net_size
 - train NumberDetector
 

@@ -40,36 +40,40 @@ class NumberImageGenerator:
                 images.extend(numImages)
             return images
 
-    @staticmethod
-    def _labeledDigits2AnnotatedNumber(
-            labeledDigits: List[Tuple[int, np.ndarray]],
-            hPad, wPad, middlePad):
-        labels, digits = unzip(labeledDigits)
-        numberImg = np.hstack(digits)
+        @staticmethod
+        def toAnnotatedNumber(
+                labeledDigits: List[Tuple[int, np.ndarray]],
+                hPad, wPad, middlePad):
+            """
+            Combines labeled digits (list of (label, image)) to number image with digits annotations
+            """
+            labels, digits = unzip(labeledDigits)
+            numberImg = np.hstack(digits)
 
-        # todo: pad up, down, left, right and between digits
-        # or images will already be padded in cache
+            # todo: pad up, down, left, right and between digits
+            # or images will already be padded in cache
 
-        h, w = numberImg.shape[:2]
-        if len(numberImg.shape) == 3:  # color image
-            paddedShape = h + 2 * hPad, w + 2 * wPad, 3
-        else:  # gray scale
-            paddedShape = h + 2 * hPad, w + 2 * wPad
+            h, w = numberImg.shape[:2]
+            if len(numberImg.shape) == 3:  # color image
+                paddedShape = h + 2 * hPad, w + 2 * wPad, 3
+            else:  # gray scale
+                paddedShape = h + 2 * hPad, w + 2 * wPad
 
-        paddedImage = np.full(paddedShape, 0, np.uint8)
-        paddedImage[hPad:hPad + h, wPad:wPad + w] = numberImg
+            paddedImage = np.full(paddedShape, 0, np.uint8)
+            paddedImage[hPad:hPad + h, wPad:wPad + w] = numberImg
 
-        boxes = [(1, 1, 5, 6) for _ in labels]
-        return paddedImage, boxes, labels
+            boxes = [(1, 1, 5, 6) for _ in labels]
+            return paddedImage, boxes, labels
 
     def batches(self, nBatches=None):
         digitsGen = (sample(self.numberImages, self.k) for _ in repeat(None))
-        annotatedNumberGen = (self._labeledDigits2AnnotatedNumber(labeledDigits, self.hPad, self.wPad, self.middlePad)
+        annotatedNumberGen = (self.utils.toAnnotatedNumber(labeledDigits, self.hPad, self.wPad, self.middlePad)
                               for labeledDigits in
                               digitsGen)
         annotatedNumberBatches = batchItems(annotatedNumberGen, self.batchSize, nBatches or 100)
-        for b in annotatedNumberBatches:
-            yield unzip(b)  # unzip to separate - imagesBatch, boxesBatch, labelsBatch
+        # unzip to separate - imagesBatch, boxesBatch, labelsBatch
+        imagesBatch_boxesBatch_labelsBatch_gen = (unzip(b) for b in annotatedNumberBatches)
+        return imagesBatch_boxesBatch_labelsBatch_gen
 
     def __call__(self, nBatches=None):
         return self.batches(nBatches)
