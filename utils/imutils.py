@@ -1,6 +1,8 @@
-from typing import Union
+from itertools import zip_longest, repeat
+from typing import Union, Tuple
 import cv2
 import itertools
+import numpy as np
 
 
 def imshow(*unnamedMat, **namedMat):
@@ -56,3 +58,72 @@ def frames(src: Union[int, str, cv2.VideoCapture], startPosition: int = 0, yield
     finally:
         if ownSrc:
             src.release()
+
+
+def padImage(image, pad):
+    pass
+
+
+def full_like_channels(img, v, size):
+    assert len(img.shape) in (2, 3)
+    channelsTuple = img.shape[2:]  # will be empty if img is grayscale
+    shape = tuple(size) + channelsTuple  # if a has depth - it will be added to size
+    return np.full(shape, v, img.dtype)
+
+
+def zeros_like_channels(img, size):
+    assert len(img.shape) in (2, 3)
+    channelsTuple = img.shape[2:]  # will be empty if img is grayscale
+    shape = tuple(size) + channelsTuple  # if a has depth - it will be added to size
+    return np.zeros(shape, img.dtype)
+
+
+def imSize(img) -> Tuple[int, int]:
+    return img.shape[:2]
+
+
+def imHeight(img) -> int:
+    return img.shape[0]
+
+
+def imWidth(img) -> int:
+    return img.shape[1]
+
+
+def imChannels(img) -> Tuple:
+    return img.shape[2:]
+
+
+def zeros(shape, dtype=np.uint8):
+    return np.zeros(shape, dtype)
+
+
+def fill(shape, fillValue, dtype=np.uint8):
+    return np.full(shape, fillValue, dtype)
+
+
+def hStack(images, padding: Tuple[int, int, int], fillValue=0):
+    assert len(images)
+    h = imHeight(images[0])
+    channels = imChannels(images[0])
+    hPadding, vPadding, mPadding = padding
+
+    hPadder = fill((h, hPadding) + channels, fillValue)
+    mPadder = fill((h, mPadding) + channels, fillValue)
+    imagesBoxes = []
+
+    parts = [hPadder]
+    for image, m in zip_longest(images, repeat(mPadder, len(images) - 1)):
+        parts.append(image)
+        if m is not None:
+            parts.append(m)
+        raise NotImplementedError("box calculation")
+        box = (1, 1, 1, 1)
+        imagesBoxes.append(box)
+    parts.append(hPadder)
+    hStackedImage = np.hstack(parts)
+
+    vPadder = fill((vPadding, imWidth(hStackedImage)) + channels, fillValue)
+
+    resultImage = np.vstack([vPadder, hStackedImage, vPadder])
+    return resultImage, imagesBoxes

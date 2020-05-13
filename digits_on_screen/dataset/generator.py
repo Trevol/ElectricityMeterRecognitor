@@ -14,13 +14,13 @@ from utils.iter_utils import batchItems, unzip
 
 class NumberImageGenerator:
     k = 6
-    hPad, wPad, middlePad = 32, 48, 2
+    hPad, wPad, middlePad = 32, 48, 10
 
     def __init__(self, datasetDir, batchSize, DEBUG_MODE=False):
         self.DEBUG_MODE = DEBUG_MODE
         self.batchSize = batchSize
         self.numberImages = self.utils.load(datasetDir)
-        self._imageHeight = self.numberImages[0][1].shape[0]  # items[0].image.height
+        self._imageH, self._imageW = self.numberImages[0][1].shape[:2]  # items[0].image[height, width]
 
     class utils:
         @staticmethod
@@ -40,30 +40,35 @@ class NumberImageGenerator:
                 images.extend(numImages)
             return images
 
-        @staticmethod
-        def toAnnotatedNumber(
-                labeledDigits: List[Tuple[int, np.ndarray]],
-                hPad, wPad, middlePad):
+        @classmethod
+        def toAnnotatedNumber___(cls,
+                                 labeledDigits: List[Tuple[int, np.ndarray]],
+                                 hPad, wPad, middlePad):
             """
             Combines labeled digits (list of (label, image)) to number image with digits annotations
             """
             labels, digits = unzip(labeledDigits)
-            numberImg = np.hstack(digits)
+            imH, imW = digits[0].shape[:2]
+            hPadding = np.zeros([imH, hPad, 3], np.uint8)
 
-            # todo: pad up, down, left, right and between digits
-            # or images will already be padded in cache
+            hParts = [hPadding] + digits + [hPadding]
+            paddedImage = np.hstack(hParts)
 
-            h, w = numberImg.shape[:2]
-            if len(numberImg.shape) == 3:  # color image
-                paddedShape = h + 2 * hPad, w + 2 * wPad, 3
-            else:  # gray scale
-                paddedShape = h + 2 * hPad, w + 2 * wPad
-
-            paddedImage = np.full(paddedShape, 0, np.uint8)
-            paddedImage[hPad:hPad + h, wPad:wPad + w] = numberImg
+            wPadding = np.zeros([wPad, paddedImage.shape[1], 3], np.uint8)
+            paddedImage = np.vstack([wPadding, paddedImage, wPadding])
 
             boxes = [(1, 1, 5, 6) for _ in labels]
             return paddedImage, boxes, labels
+
+        @staticmethod
+        def toAnnotatedNumber(labeledDigits: List[Tuple[int, np.ndarray]],
+                              hPad, vPad, middlePad):
+            """
+            Combines labeled digits (list of (label, image)) to number image with digits annotations
+            """
+            labels, digits = unzip(labeledDigits)
+            numberImage, boxes = hStack(digits, (hPad, vPad, middlePad), fillValue=0)
+            return numberImage, boxes, labels
 
     def batches(self, nBatches=None):
         digitsGen = (sample(self.numberImages, self.k) for _ in repeat(None))
@@ -80,7 +85,7 @@ class NumberImageGenerator:
 
 
 if __name__ == '__main__':
-    from utils import imshowWait, augmentations
+    from utils import imshowWait, augmentations, hStack
 
 
     def NumberGenerator_test():
