@@ -60,7 +60,7 @@ def frames(src: Union[int, str, cv2.VideoCapture], startPosition: int = 0, yield
             src.release()
 
 
-def padImage(image, pad):
+def padImage(image, padding):
     pass
 
 

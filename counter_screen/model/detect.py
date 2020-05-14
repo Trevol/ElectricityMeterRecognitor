@@ -1,5 +1,5 @@
 from counter_screen.model.CounterScreenModel import CounterScreenModel
-from utils import fit_image_to_shape, imshow
+from utils.imutils import fit_image_to_shape, imshowWait
 from yolo.utils.box import visualize_boxes
 import cv2
 from glob import glob
@@ -27,9 +27,7 @@ def main():
         print(labels, [labelIndex[_id] for _id in labels])
         visualize_boxes(image, boxes, labels, probs, labelNames)
 
-        imshow(img=image[..., ::-1])
-        cv2.setWindowTitle("img", image_path)
-        if cv2.waitKey() == 27:
+        if imshowWait(img=(image[..., ::-1], image_path)) == 27:
             break
 
 

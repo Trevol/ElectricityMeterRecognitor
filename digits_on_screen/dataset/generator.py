@@ -1,3 +1,4 @@
+from functools import partial
 from itertools import repeat
 from typing import Tuple, List, Iterable, Generator
 
@@ -70,9 +71,10 @@ class NumberImageGenerator:
         numberImageFn = self.utils.toAnnotatedNumberImage
         annotatedNumberImagesGen = (numberImageFn(labeledDigits, self.padding) for labeledDigits in digitsSampler)
 
-        augmentFn = self.utils.augment
-        augmentedImagesGen = (augmentFn(self.augmentations, annImg) for annImg in annotatedNumberImagesGen)
+        augmentFn = partial(self.utils.augment, self.augmentations)
+        augmentedImagesGen = (augmentFn(annImg) for annImg in annotatedNumberImagesGen)
         raise NotImplementedError("How to yield all this stuff???? Original, augmented, yolo-formatted...")
+
         annotatedNumberBatches = batchItems(augmentedImagesGen, self.batchSize, nBatches or 100)
         # unzip to separate - imagesBatch, boxesBatch, labelsBatch
         imagesBatch_boxesBatch_labelsBatch_gen = (unzip(b) for b in annotatedNumberBatches)

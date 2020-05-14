@@ -5,3 +5,12 @@ Quantization:
 goggle "compile yolo for android"
 https://www.youtube.com/watch?v=JasVghcUeyg Run YOLOv3 on Android with OpenCV (Custom Trained YOLO too) || Android Deep Learning with OpenCV #6
 https://www.youtube.com/watch?v=lGtUA5wz0tk Let's Build an Android AI App with OpenCV (+put YOLOv3 there) || Android Deep Learning with OpenCV#1
+
+
+Light version of convolutional neural network Yolo v3 & v2 for objects detection with a minimum of dependencies (INT8-inference, BIT1-XNOR-inference)
+https://github.com/AlexeyAB/yolo2_light
+
+
+google "binary cnn"
+https://arxiv.org/pdf/1606.05487.pdf   YodaNN1: An Architecture for Ultra-Low PowerBinary-Weight CNN Acceleration
+https://pjreddie.com/media/files/papers/xnor.pdf  XNOR-Net: ImageNet Classification Using BinaryConvolutional Neural Networks
