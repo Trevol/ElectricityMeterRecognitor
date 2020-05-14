@@ -1,7 +1,7 @@
 +++ padding (h, v, middle) for generated image
 +++ calculate bboxes
-- augmentations
- - with boxes
++++ augmentations
+  +++ with boxes
   +++ Perspective transform
   +++ other augmentations
   +++ check noise augmentations
