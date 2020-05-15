@@ -5,9 +5,9 @@
   +++ Perspective transform
   +++ other augmentations
   +++ check noise augmentations
+- pad with zeroes to net_size
 - convert to Yolo input format
 - DEBUG_MODE on/off
-- pad with zeroes to net_size
 - train NumberDetector
 
 
