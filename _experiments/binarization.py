@@ -1,52 +1,33 @@
-import matplotlib
-import matplotlib.pyplot as plt
 import cv2
-
-from skimage.data import page
+import numpy as np
 from skimage.filters import (threshold_otsu, threshold_niblack,
                              threshold_sauvola)
 
-
-matplotlib.rcParams['font.size'] = 9
-
-
-# image = page()
-image = cv2.imread("../counter_images/01305.png", cv2.IMREAD_GRAYSCALE)
-# image = cv2.imread("../venv/lib/python3.7/site-packages/skimage/data/page.png", cv2.IMREAD_GRAYSCALE)
-
-image = 255 - image
+from utils.imutils import imshowWait
 
 
-image = cv2.medianBlur(image, 7)
+def main():
+    image = cv2.imread("./counter_images/01305.png", cv2.IMREAD_GRAYSCALE)
+    # image = cv2.imread("../venv/lib/python3.7/site-packages/skimage/data/page.png", cv2.IMREAD_GRAYSCALE)
 
-binary_global = image > threshold_otsu(image)
+    image = 255 - image
 
-window_size = 41
-thresh_niblack = threshold_niblack(image, window_size=window_size, k=0.8)
-thresh_sauvola = threshold_sauvola(image, window_size=window_size, k=.1)
+    image = cv2.medianBlur(image, 7)
 
-binary_niblack = image > thresh_niblack
-binary_sauvola = image > thresh_sauvola
+    binary_global = image > threshold_otsu(image)
+    binary_global = np.uint8(binary_global * 255)
 
-plt.figure(figsize=(8, 7))
-plt.subplot(2, 2, 1)
-plt.imshow(image, cmap=plt.cm.gray)
-plt.title('Original')
-plt.axis('off')
+    window_size = 41
+    thresh_niblack = threshold_niblack(image, window_size=window_size, k=0.8)
+    thresh_sauvola = threshold_sauvola(image, window_size=window_size, k=.1)
 
-plt.subplot(2, 2, 2)
-plt.title('Global Threshold')
-plt.imshow(binary_global, cmap=plt.cm.gray)
-plt.axis('off')
+    binary_niblack = image > thresh_niblack
+    binary_niblack = np.uint8(binary_niblack * 255)
 
-plt.subplot(2, 2, 3)
-plt.imshow(binary_niblack, cmap=plt.cm.gray)
-plt.title('Niblack Threshold')
-plt.axis('off')
+    binary_sauvola = image > thresh_sauvola
+    binary_sauvola = np.uint8(binary_sauvola * 255)
 
-plt.subplot(2, 2, 4)
-plt.imshow(binary_sauvola, cmap=plt.cm.gray)
-plt.title('Sauvola Threshold')
-plt.axis('off')
+    imshowWait(image=image, binary_global=binary_global, binary_niblack=binary_niblack, binary_sauvola=binary_sauvola)
 
-plt.show()
+
+main()

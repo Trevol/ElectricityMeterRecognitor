@@ -10,6 +10,8 @@ from random import sample, choices
 
 from albumentations import BboxParams, Compose
 
+from digits_on_screen import DigitsOnScreenModel
+from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
 from digits_on_screen.dataset.generator import NumberImageGenerator
 from utils.iter_utils import batchItems, unzip
 from utils.imutils import hStack
@@ -18,24 +20,29 @@ from utils.imutils import hStack
 def NumberGenerator_test():
     from utils.imutils import imshowWait
     from utils import augmentations
-    anchors = [10, 13, 16, 30, 33, 23, 30, 61, 62, 45, 59, 119, 116, 90, 156, 198, 373, 326]
-    gen = NumberImageGenerator('./28x28', batchSize=8, netSize=320, anchors=anchors,
+
+    gen = NumberImageGenerator('./28x28', batchSize=8,
+                               netSize=DigitsOnScreenModel.net_size, anchors=DigitsOnScreenModel.anchors,
                                augmentations=augmentations.make(.7))
 
     for (yoloImagesBatch, y1Batch, y2Batch, y3Batch), origBatch, augmentedBatch in gen.batches(200, DEBUG=True):
+        key = 0
         for (image, boxes, labels), (augmImage, augmBoxes, augmLabels) in zip(origBatch, augmentedBatch):
             image = image.copy()
             for x1, y1, x2, y2 in boxes:
                 cv2.rectangle(image, (x1, y1), (x2, y2), (200, 0, 0), 1)
             for x1, y1, x2, y2 in augmBoxes:
                 cv2.rectangle(augmImage, (int(x1), int(y1)), (int(x2), int(y2)), (200, 0, 0), 1)
-            if imshowWait(image=(image, labels), augmImage=augmImage) == 27: return
+            key = imshowWait(image=(image, labels), augmImage=augmImage)
+            if key == 27:
+                break
+        if key == 27:
+            break
 
-    return
-    # in DEBUG_MODE generator also yields (image, bboxes, labels)
-    for xs, ys1, ys2, ys3, image, boxes, labels in gen.batches(3):
-        for box, label in zip(boxes, labels):
-            print(box, label)
+    for yoloImagesBatch, y1Batch, y2Batch, y3Batch in gen.batches(2):
+        print("------------------------")
+        print(yoloImagesBatch.max())
+        print(y1Batch.shape, y2Batch.shape, y3Batch.shape)
 
 
 NumberGenerator_test()

@@ -7,13 +7,16 @@ import numpy as np
 
 def imshow(*unnamedMat, **namedMat):
     for name, matOrMatWithTitle in itertools.chain(enumerate(unnamedMat), namedMat.items()):
+        if matOrMatWithTitle is None:
+            continue
         if isinstance(matOrMatWithTitle, (tuple, list)) and len(matOrMatWithTitle) == 2:
             mat, title = matOrMatWithTitle
         else:
             mat, title = matOrMatWithTitle, None
-        cv2.imshow(str(name), mat)
+        winName = str(name)
+        cv2.imshow(winName, mat)
         if title is not None:
-            cv2.setWindowTitle(name, str(title))
+            cv2.setWindowTitle(winName, str(title))
 
 
 def imshowWait(*unnamedMat, **namedMat):
@@ -31,6 +34,20 @@ def fit_image_to_shape(image, dstShape):
     if scale >= 1:
         return image
     return cv2.resize(image, None, None, scale, scale)
+
+
+def fitToWidth(image, desiredWidth, fillValue):
+    h, w = imSize(image)
+    k = desiredWidth / w
+    newHeight = int(h * k)
+    newSize = desiredWidth, newHeight
+
+    resized = cv2.resize(image, newSize)
+    assert imSize(resized) == (newHeight, desiredWidth)
+
+    bottomPad = fill((desiredWidth - newHeight, desiredWidth) + imChannels(image), fillValue)
+    fittedImg = np.vstack([resized, bottomPad])
+    return fittedImg
 
 
 def imageLaplacianSharpness(image):

@@ -28,6 +28,9 @@ class NumberImageGenerator:
         self.netSize = netSize
         self._yolo = _yolo(netSize, self.nClasses, anchors)
 
+    def datasetBatchesCount(self):
+        return 100
+
     def batches(self, nBatches=None, DEBUG=False):
         digitsSampler = (choices(self.numberImages, k=self.k) for _ in repeat(None))
 
@@ -37,14 +40,16 @@ class NumberImageGenerator:
         augmentFn = partial(_utils.augmentAndPadToNet, self.augmentations, self.netSize)
         augmentedImagesGen = ((annImg, augmentFn(annImg)) for annImg in annotatedNumberImagesGen)
 
-        original_augmented_batches = batchItems(augmentedImagesGen, self.batchSize, nBatches or 100)
-
-        # TODO: transform augmented images to (netSize, netSize) by 0-padding
+        original_augmented_batches = batchItems(augmentedImagesGen, self.batchSize,
+                                                nBatches or self.datasetBatchesCount())
 
         for b in original_augmented_batches:
             origBatch, augmentedBatch = unzip(b)
             yoloBatch = self._yolo.inputBatch(augmentedBatch)
-            yield yoloBatch, origBatch, augmentedBatch
+            if DEBUG:
+                yield yoloBatch, origBatch, augmentedBatch
+            else:
+                yield yoloBatch
 
         # imagesBatch_boxesBatch_labelsBatch_gen = \
         #     ((self._yolo.inputBatch(augmentedBatch), origBatch, augmentedBatch)

@@ -1,3 +1,12 @@
+- fit image to netSize-width and 0-pad to netSize-height
+    - train
+    - detect
+- apply sauvola binarization before detection
+    - test: apply to detected screens
+- try detect black (dark) rectangle by opencv
+
++++ train NumberDetector
++++ DEBUG_MODE on/off
 +++ padding (h, v, middle) for generated image
 +++ calculate bboxes
 +++ augmentations
@@ -5,10 +14,6 @@
   +++ Perspective transform
   +++ other augmentations
   +++ check noise augmentations
-- pad with zeroes to net_size
-- convert to Yolo input format
-- DEBUG_MODE on/off
-- train NumberDetector
-
-
-++++ invert (white digits on black BG)
++++ pad with zeroes to net_size
++++ convert to Yolo input format
++++ invert (white digits on black BG)
