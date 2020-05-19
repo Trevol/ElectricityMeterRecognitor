@@ -1,6 +1,9 @@
-- fit image to netSize-width and 0-pad to netSize-height
-    - train
-    - detect
+
+
+
+??? fit image to netSize-width and 0-pad to netSize-height
+    ??? train
+    ??? detect
 - apply sauvola binarization before detection
     - test: apply to detected screens
 - try detect black (dark) rectangle by opencv

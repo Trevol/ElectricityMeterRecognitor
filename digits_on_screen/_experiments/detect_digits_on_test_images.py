@@ -1,3 +1,4 @@
+import utils.suppressTfWarnings
 from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
 from utils import toInt
 from utils.imutils import fit_image_to_shape, imshowWait, imHeight, imWidth, imSize, fill, imChannels, fitToWidth
@@ -16,26 +17,52 @@ def rPad():
 
 
 def main():
-    imagesPattern = './test_images/screens/full_res/*.png'
+    imagesPattern = './test_images/screen1*.png'
 
-    digitsDetector = DigitsOnScreenModel('./weights/1/weights_7_1.097.h5')
-    netSize = 320  # DigitsOnScreenModel.net_size
+    digitsDetector = DigitsOnScreenModel('./weights/4_resize_finetune/weights_28_0.150.h5')
     for image_path in sorted(glob(imagesPattern)):
         image = cv2.imread(image_path)
 
-        fittedImg = fitToWidth(image, netSize)
+        pad = 40
+        h, w = imSize(image)
+        biggerImage = fill([h + pad * 2, w + pad * 2, 3], 0)
+        biggerImage[pad:h + pad, pad:w + pad] = image
+        image = biggerImage
 
-        # image = fit_image_to_shape(image, (1000, 1800))
+        boxes, labels, probs = digitsDetector.detect(image, .5)
 
-        boxes, labels, probs = digitsDetector.detect(fittedImg, .5)
+        drawObjects(image, boxes, labels, probs)
 
-        drawObjects(fittedImg, boxes, labels, probs)
-
-        if imshowWait(img=(fittedImg, image_path)) == 27:
+        if imshowWait(img=(image, image_path)) == 27:
             break
 
 
+def detect_on_single_dataset_image():
+    imageFile = '/home/trevol/Repos/Digits_Detection/not_notMNIST/Demo/Numeric/28x28/numeric_8/ArialNarrowI.png'
+    digitsDetector = DigitsOnScreenModel('./weights/4_resize_finetune/weights_28_0.150.h5')
+    # 1) 28x28 black on white
+    # 2) padded 28x28 black on white
+    # 3) 28x28 white on black
+    # 2) padded 28x28 white on black
+    image = cv2.imread(imageFile)
+    numOfImages = 6
+    image = np.hstack([image] * numOfImages)
+
+    image = 255 - image
+
+    pad = 80
+    fillValue = image[0, 0, 0]
+    bigger = fill([imHeight(image) + pad * 2, imWidth(image) + pad * 2, 3], fillValue)
+    bigger[pad:imHeight(image) + pad, pad:imWidth(image) + pad] = image
+    image = bigger
+
+    boxes, labels, probs = digitsDetector.detect(image, .5)
+    drawObjects(image, boxes, labels, probs)
+    imshowWait(img=image)
+
+
 def drawObjects(image, boxes, labels, probs):
+    print("-----Objects------")
     for i, (box, label, prob) in enumerate(zip(boxes, labels, probs)):
         x1, y1, x2, y2 = toInt(*box)
         cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 200), 1)
@@ -44,4 +71,5 @@ def drawObjects(image, boxes, labels, probs):
         print(i, label, prob)
 
 
+# detect_on_single_dataset_image()
 main()

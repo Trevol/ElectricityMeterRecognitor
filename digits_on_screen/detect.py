@@ -1,3 +1,5 @@
+from itertools import repeat
+
 from counter_screen.model.CounterScreenModel import CounterScreenModel
 from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
 from utils import toInt
@@ -8,6 +10,44 @@ from yolo.utils.box import visualize_boxes
 import cv2
 from glob import glob
 import os
+
+
+def drawObjects(image, boxes, labels, probs, color=(200, 0, 0)):
+    if probs is None or len(probs) == 0:
+        probs = repeat(1., len(boxes))
+    print("---------")
+    for i, (box, label, prob) in enumerate(zip(boxes, labels, probs)):
+        x1, y1, x2, y2 = toInt(*box)
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
+        # textOrd = (x1 + x2) // 2, (y1 + y2) // 2 #center of box
+        textOrd = x1, y1
+        cv2.putText(image, str(label), textOrd, cv2.FONT_HERSHEY_SIMPLEX, .5, color)
+        print(i, label, prob)
+
+
+def evaluateOnDatasetImages():
+    from utils import augmentations
+    from digits_on_screen.dataset.generator import NumberImageGenerator
+
+    augments = augmentations.make(1)
+    # augments = None
+
+    gen = NumberImageGenerator('./dataset/28x28', batchSize=8,
+                               netSize=DigitsOnScreenModel.net_size, anchors=DigitsOnScreenModel.anchors,
+                               augmentations=augments)
+    digetsDetector = DigitsOnScreenModel(weights='./weights/4_resize_finetune/weights_28_0.150.h5')
+    for _, origBatch, augmentedBatch in gen.batches(200, DEBUG=True):
+        key = 0
+        for (image, _, _), (augmImage, _, _) in zip(origBatch, augmentedBatch):
+            image = image.copy()
+            boxes, labels, probs = digetsDetector.detect(augmImage)
+            # drawObjects(image, boxes, labels, probs, (200, 0, 0))
+            drawObjects(augmImage, boxes, labels, probs, (0, 200, 0))
+            key = imshowWait(image=(image, labels), augmImage=augmImage)
+            if key == 27:
+                break
+        if key == 27:
+            break
 
 
 def main():
@@ -45,13 +85,5 @@ def main():
             break
 
 
-def drawObjects(image, boxes, labels, probs):
-    for i, (box, label, prob) in enumerate(zip(boxes, labels, probs)):
-        x1, y1, x2, y2 = toInt(*box)
-        cv2.rectangle(image, (x1, y1), (x2, y2), (0, 0, 200), 1)
-        center = (x1 + x2) // 2, (y1 + y2) // 2
-        cv2.putText(image, str(i), center, cv2.FONT_HERSHEY_SIMPLEX, .5, (200, 0, 0))
-        print(i, label, prob)
-
-
-main()
+# main()
+evaluateOnDatasetImages()

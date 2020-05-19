@@ -8,7 +8,7 @@ import os
 from glob import glob
 from random import sample, choices
 
-from albumentations import BboxParams, Compose
+from albumentations import BboxParams, Compose, RGBShift
 
 from digits_on_screen import DigitsOnScreenModel
 from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
@@ -23,8 +23,7 @@ def NumberGenerator_test():
 
     gen = NumberImageGenerator('./28x28', batchSize=8,
                                netSize=DigitsOnScreenModel.net_size, anchors=DigitsOnScreenModel.anchors,
-                               augmentations=augmentations.make(.7))
-
+                               augmentations=augmentations.make(1))
     for (yoloImagesBatch, y1Batch, y2Batch, y3Batch), origBatch, augmentedBatch in gen.batches(200, DEBUG=True):
         key = 0
         for (image, boxes, labels), (augmImage, augmBoxes, augmLabels) in zip(origBatch, augmentedBatch):

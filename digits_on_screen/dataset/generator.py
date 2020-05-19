@@ -12,6 +12,7 @@ from albumentations import BboxParams, Compose
 
 from utils.iter_utils import batchItems, unzip
 from utils.imutils import hStack, imSize, fill, imChannels
+from yolo.dataset.augment import resize_image
 from yolo.utils.box import create_anchor_boxes
 
 
@@ -131,7 +132,8 @@ class _utils:
         image, boxes, labels = image_boxes_labels
         r = augmentations(image=image, bboxes=boxes, labels=labels)
         image, boxes, labels = r['image'], r['bboxes'], r['labels']
-        image = cls.padToNetSize(image, netSize, fillValue=0)
+        image, boxes = cls.resizeImage(image, boxes, netSize, netSize)
+        # image = cls.padToNetSize(image, netSize, fillValue=0)
         return image, boxes, labels
 
 

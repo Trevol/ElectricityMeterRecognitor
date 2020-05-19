@@ -2,7 +2,7 @@ from albumentations import (
     HorizontalFlip, IAAPerspective, ShiftScaleRotate, CLAHE, RandomRotate90,
     Transpose, ShiftScaleRotate, Blur, OpticalDistortion, GridDistortion, HueSaturationValue,
     IAAAdditiveGaussianNoise, GaussNoise, MotionBlur, MedianBlur, IAAPiecewiseAffine,
-    IAASharpen, IAAEmboss, RandomBrightnessContrast, Flip, OneOf, Compose, ISONoise
+    IAASharpen, IAAEmboss, RandomBrightnessContrast, Flip, OneOf, Compose, ISONoise, RGBShift
 )
 import cv2
 
@@ -25,5 +25,6 @@ def make(p=0.5):
             IAAEmboss(),
             RandomBrightnessContrast(),
         ], p=0.3),
-        HueSaturationValue(p=0.3)
+        HueSaturationValue(p=0.3),
+        RGBShift(40, 40, 40)
     ], p=p)

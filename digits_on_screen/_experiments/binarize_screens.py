@@ -18,7 +18,7 @@ def binarize(gray, windowSize=41, k=.1):
 
 
 def main():
-    images = '/test_images/screens/*/*.png'
+    images = './test_images/screen1.png'
     f = sorted(glob(images))[0]
     img = cv2.imread(f, cv2.IMREAD_GRAYSCALE)
     denoised = cv2.medianBlur(img, 3)
@@ -26,7 +26,7 @@ def main():
     windowSize = 41
     while True:
         binarized = binarize(img, windowSize=windowSize, k=.1)
-        key = imshowWait(img, denoised, (binarized, windowSize))
+        key = imshowWait(img, denoised, (binarized, windowSize), 255-binarized)
         if key == 27:
             break
         elif key == ord('w'):
