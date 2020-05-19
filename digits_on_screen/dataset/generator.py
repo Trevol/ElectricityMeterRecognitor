@@ -6,8 +6,8 @@ import numpy as np
 import cv2
 import os
 from glob import glob
-from random import sample, choices
-
+from random import sample, choices, seed
+from time import time_ns
 from albumentations import BboxParams, Compose
 
 from utils.iter_utils import batchItems, unzip
@@ -17,7 +17,7 @@ from yolo.utils.box import create_anchor_boxes
 
 
 class NumberImageGenerator:
-    k = 6
+    maxNumberOfDigits = 9
     hPad, vPad, middlePad = 48, 48, 10
     padding = hPad, vPad, middlePad
     nClasses = 10
@@ -33,7 +33,10 @@ class NumberImageGenerator:
         return 100
 
     def batches(self, nBatches=None, DEBUG=False):
-        digitsSampler = (choices(self.numberImages, k=self.k) for _ in repeat(None))
+        def numOfDigits():
+            return np.random.randint(1, self.maxNumberOfDigits + 1)
+
+        digitsSampler = (choices(self.numberImages, k=numOfDigits()) for _ in repeat(None))
 
         numberImageFn = _utils.toAnnotatedNumberImage
         annotatedNumberImagesGen = (numberImageFn(labeledDigits, self.padding) for labeledDigits in digitsSampler)
@@ -124,7 +127,7 @@ class _utils:
 
     @staticmethod
     def composeAugmentations(augmentations):
-        bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.8)
+        bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.5)
         return Compose(augmentations or [], bbox_params=bbox_params)
 
     @classmethod
