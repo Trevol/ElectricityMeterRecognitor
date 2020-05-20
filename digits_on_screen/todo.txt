@@ -1,4 +1,12 @@
-- set random state
+- random number of digits
+  - from 1 to 9
+  - from 0???? Test it
+    - or simply generate black img
+- randomly invert image (255-img)
+- random pad
+  - top, bottom,
+  - left, right
+  - between digits
 
 
 

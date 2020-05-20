@@ -16,14 +16,20 @@ def rPad():
     pass
 
 
+def getDetector():
+    weights = './weights/6/weights_10_4.348.h5'
+    digitsDetector = DigitsOnScreenModel(weights)
+    return digitsDetector
+
+
 def main():
     imagesPattern = './test_images/screen1*.png'
 
-    digitsDetector = DigitsOnScreenModel('./weights/4_resize_finetune/weights_28_0.150.h5')
+    digitsDetector = getDetector()
     for image_path in sorted(glob(imagesPattern)):
         image = cv2.imread(image_path)
 
-        pad = 40
+        pad = 20
         h, w = imSize(image)
         biggerImage = fill([h + pad * 2, w + pad * 2, 3], 0)
         biggerImage[pad:h + pad, pad:w + pad] = image
@@ -39,7 +45,7 @@ def main():
 
 def detect_on_single_dataset_image():
     imageFile = '/home/trevol/Repos/Digits_Detection/not_notMNIST/Demo/Numeric/28x28/numeric_8/ArialNarrowI.png'
-    digitsDetector = DigitsOnScreenModel('./weights/4_resize_finetune/weights_28_0.150.h5')
+    digitsDetector = getDetector()
     # 1) 28x28 black on white
     # 2) padded 28x28 black on white
     # 3) 28x28 white on black
@@ -50,7 +56,7 @@ def detect_on_single_dataset_image():
 
     image = 255 - image
 
-    pad = 80
+    pad = 5
     fillValue = image[0, 0, 0]
     bigger = fill([imHeight(image) + pad * 2, imWidth(image) + pad * 2, 3], fillValue)
     bigger[pad:imHeight(image) + pad, pad:imWidth(image) + pad] = image

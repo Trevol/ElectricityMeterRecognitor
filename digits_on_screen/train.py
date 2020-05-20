@@ -53,7 +53,7 @@ class DigitsOnScreenModelTraining:
 
 
 def main():
-    model = DigitsOnScreenModel('./weights/3_resize/weights_10_0.459.h5')
+    model = DigitsOnScreenModel('./weights/6/weights_10_4.348.h5')
     trainParams = dict(
         datasetDir='./dataset/28x28',
         batch_size=8,

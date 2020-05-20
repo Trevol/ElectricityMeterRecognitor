@@ -119,9 +119,9 @@ def fill(shape, fillValue, dtype=np.uint8):
     return np.full(shape, fillValue, dtype)
 
 
-def hStack(images, padding: Tuple[int, int, int], fillValue=0):
-    h = imHeight(images[0])
-    channels = imChannels(images[0])
+def hStack(images, padding: Tuple[int, int, int], fillValue=0, defaultChannels=(3,)):
+    h = imHeight(images[0]) if len(images) else 0
+    channels = imChannels(images[0]) if len(images) else defaultChannels
     hPadding, vPadding, mPadding = padding
 
     hPadder = fill((h, hPadding) + channels, fillValue)

@@ -35,7 +35,7 @@ def evaluateOnDatasetImages():
     gen = NumberImageGenerator('./dataset/28x28', batchSize=8,
                                netSize=DigitsOnScreenModel.net_size, anchors=DigitsOnScreenModel.anchors,
                                augmentations=augments)
-    digetsDetector = DigitsOnScreenModel(weights='./weights/4_resize_finetune/weights_28_0.150.h5')
+    digetsDetector = DigitsOnScreenModel(weights='./weights/6/weights_10_4.348.h5')
     for _, origBatch, augmentedBatch in gen.batches(200, DEBUG=True):
         key = 0
         for (image, _, _), (augmImage, _, _) in zip(origBatch, augmentedBatch):

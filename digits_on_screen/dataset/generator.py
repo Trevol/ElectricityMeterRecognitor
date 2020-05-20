@@ -33,13 +33,19 @@ class NumberImageGenerator:
         return 100
 
     def batches(self, nBatches=None, DEBUG=False):
-        def numOfDigits():
-            return np.random.randint(1, self.maxNumberOfDigits + 1)
 
-        digitsSampler = (choices(self.numberImages, k=numOfDigits()) for _ in repeat(None))
+        def rndNumOfDigits():
+            return _utils.rnd0(self.maxNumberOfDigits)
+
+        def rndPadding():
+            rn0 = _utils.rnd0
+            rn1 = _utils.rnd1
+            return rn1(self.hPad), rn1(self.vPad), rn0(self.middlePad)
+
+        digitsSampler = (choices(self.numberImages, k=rndNumOfDigits()) for _ in repeat(None))
 
         numberImageFn = _utils.toAnnotatedNumberImage
-        annotatedNumberImagesGen = (numberImageFn(labeledDigits, self.padding) for labeledDigits in digitsSampler)
+        annotatedNumberImagesGen = (numberImageFn(labeledDigits, rndPadding()) for labeledDigits in digitsSampler)
 
         augmentFn = partial(_utils.augmentAndPadToNet, self.augmentations, self.netSize)
         augmentedImagesGen = ((annImg, augmentFn(annImg)) for annImg in annotatedNumberImagesGen)
@@ -120,14 +126,14 @@ class _utils:
         """
         Combines labeled digits (list of (label, image)) to number image with digits annotations
         """
-        labels, digits = unzip(labeledDigits)
+        labels, digits = unzip(labeledDigits, [], [])
         numberImage, boxes = hStack(digits, padding, fillValue=0)
-        boxes = [(x1, y1 - 3, x2, y2 + 3) for x1, y1, x2, y2 in boxes]
+        boxes = [(x1, y1, x2, y2) for x1, y1, x2, y2 in boxes]
         return numberImage, boxes, labels
 
     @staticmethod
     def composeAugmentations(augmentations):
-        bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.5)
+        bbox_params = BboxParams(format='pascal_voc', label_fields=['labels'], min_visibility=.7)
         return Compose(augmentations or [], bbox_params=bbox_params)
 
     @classmethod
@@ -138,6 +144,14 @@ class _utils:
         image, boxes = cls.resizeImage(image, boxes, netSize, netSize)
         # image = cls.padToNetSize(image, netSize, fillValue=0)
         return image, boxes, labels
+
+    @staticmethod
+    def rnd1(high):
+        return np.random.randint(1, high + 1)
+
+    @staticmethod
+    def rnd0(high):
+        return np.random.randint(0, high + 1)
 
 
 class _yolo:
