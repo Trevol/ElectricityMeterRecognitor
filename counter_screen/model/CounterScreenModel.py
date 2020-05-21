@@ -1,3 +1,4 @@
+from utils.iter_utils import unzip
 from yolo.frontend import YoloDetector
 from yolo.net import Yolonet
 
@@ -29,3 +30,13 @@ class CounterScreenModel:
     def detect(self, image, threshold=.5):
         detector = YoloDetector(self.yolonet(), self.anchors, net_size=self.net_size)
         return detector.detect(image, threshold)  # boxes, labels, probs
+
+    def detectScreen(self, image):
+        counterScreenLabel = 1
+        boxes, labels, probs = self.detect(image, 0.8)
+        # filter only screens
+        onlyScreens = ((b, l, p) for b, l, p in zip(boxes, labels, probs) if l == counterScreenLabel)
+        boxes, labels, probs = unzip(onlyScreens, [], [], [])
+        if len(boxes) == 0:
+            return None
+        return boxes[0]

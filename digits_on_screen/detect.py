@@ -4,25 +4,13 @@ from counter_screen.model.CounterScreenModel import CounterScreenModel
 from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
 from utils import toInt
 from utils.bbox_utils import imageByBox
+from utils.detection_visualization import drawObjects
 from utils.imutils import fit_image_to_shape, imshowWait, fitToWidth
 from utils.iter_utils import unzip
 from yolo.utils.box import visualize_boxes
 import cv2
 from glob import glob
 import os
-
-
-def drawObjects(image, boxes, labels, probs, color=(200, 0, 0)):
-    if probs is None or len(probs) == 0:
-        probs = repeat(1., len(boxes))
-    print("---------")
-    for i, (box, label, prob) in enumerate(zip(boxes, labels, probs)):
-        x1, y1, x2, y2 = toInt(*box)
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
-        # textOrd = (x1 + x2) // 2, (y1 + y2) // 2 #center of box
-        textOrd = x1, y1
-        cv2.putText(image, str(label), textOrd, cv2.FONT_HERSHEY_SIMPLEX, .5, color)
-        print(i, label, prob)
 
 
 def evaluateOnDatasetImages():

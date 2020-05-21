@@ -3,6 +3,7 @@ from typing import Union, Tuple
 import cv2
 import itertools
 import numpy as np
+from skimage.filters import threshold_sauvola
 
 
 def imshow(*unnamedMat, **namedMat):
@@ -144,3 +145,14 @@ def hStack(images, padding: Tuple[int, int, int], fillValue=0, defaultChannels=(
 
     resultImage = np.vstack([vPadder, hStackedImage, vPadder])
     return resultImage, boxes
+
+
+def binarizeSauvola(gray, windowSize=41, k=.1):
+    thresh_sauvola = threshold_sauvola(gray, window_size=windowSize, k=k)
+    binary_sauvola = gray > thresh_sauvola
+    binary_sauvola = np.uint8(binary_sauvola * 255)
+    return binary_sauvola
+
+
+def imInvert(image, out=None):
+    return np.subtract(255, image, out=out)
