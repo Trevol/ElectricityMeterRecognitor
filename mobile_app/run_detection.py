@@ -40,23 +40,29 @@ def display(img, screenBox, digits, digitBoxes):
     return drawObjects(img, digitBoxes, digits, None)
 
 
+def drawDigits(image, boxes, digits, color=(0, 200, 0)):
+    for box, digit in zip(boxes, digits):
+        x1, y1, x2, y2 = toInt(*box)
+
+        textOrd = (x1 + x2) // 2, (y1 + y2) // 2
+        cv2.putText(image, str(digit), textOrd, cv2.FONT_HERSHEY_SIMPLEX, .8, color, 2)
+    return image
+
+
 def main():
     screenDetector = createScreenDetector()
     digitsDetector = createDigitsDetector()
     for image, imagePath in frames():
-        box = screenDetector.detectScreen(image)
-        if box is None:
-            continue
-
-        screenImg = imageByBox(image, box)
-        digitBoxes, digits, digitProbs = digitsDetector.detectDigits(screenImg)
-
-        # display(image, box, digits, digitBoxes)
-        drawObjects(screenImg, digitBoxes, digits, digitProbs)
+        screenBox = screenDetector.detectScreen(image)
+        screenImg = None
+        if screenBox is not None:
+            screenImg, digitBoxes, digits, digitProbs = digitsDetector.detectDigits(image, screenBox)
+            # display(image, screenBox, digits, digitBoxes)
+            drawDigits(screenImg, digitBoxes, digits)
 
         imgs = dict(
             img=(image[..., ::-1], imagePath),
-            screenImg=screenImg[..., ::-1]
+            screenImg=screenImg[..., ::-1] if screenImg is not None else None
         )
         if imshowWait(**imgs) == 27:
             break

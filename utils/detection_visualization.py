@@ -7,24 +7,27 @@ from utils import toInt
 from utils.imutils import imWidth, imHeight
 
 
-def drawObjects(image, boxes, labels, probs, color=(200, 0, 0), drawProbs=True):
+def drawObjects(image, boxes, labels, probs, color=(200, 0, 0), drawBoxes=True, drawLabels=True, drawProbs=True,
+                printToConsole=True):
     if probs is None or len(probs) == 0:
         probs = repeat(1., len(boxes))
-    print("---------")
+    if printToConsole:
+        print("---------")
     for box, label, prob in zip(boxes, labels, probs):
         x1, y1, x2, y2 = toInt(*box)
-        cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
+        if drawBoxes:
+            cv2.rectangle(image, (x1, y1), (x2, y2), color, 1)
 
-        text = str(label)
-        if drawProbs:
-            probPct = int(round(prob * 100))
-            if probPct < 100:
-                text = f"{label}:{probPct}"
-
-        textOrd = x1, min(y2, imHeight(image)) - 1
-
-        cv2.putText(image, text, textOrd, cv2.FONT_HERSHEY_SIMPLEX, .5, color)
-        print(label, prob)
+        if drawLabels:
+            text = str(label)
+            if drawProbs:
+                probPct = int(round(prob * 100))
+                if probPct < 100:
+                    text = f"{label}:{probPct}"
+            textOrd = x1, min(y2, imHeight(image)) - 1
+            cv2.putText(image, text, textOrd, cv2.FONT_HERSHEY_SIMPLEX, .5, color)
+        if printToConsole:
+            print(label, prob)
     return image
 
 

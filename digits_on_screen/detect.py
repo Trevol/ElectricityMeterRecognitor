@@ -30,7 +30,7 @@ def evaluateOnDatasetImages():
             image = image.copy()
             boxes, labels, probs = digetsDetector.detect(augmImage)
             # drawObjects(image, boxes, labels, probs, (200, 0, 0))
-            drawObjects(augmImage, boxes, labels, probs, (0, 200, 0))
+            drawObjects(augmImage, boxes, labels, probs)
             key = imshowWait(image=(image, labels), augmImage=augmImage)
             if key == 27:
                 break

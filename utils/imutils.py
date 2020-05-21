@@ -9,6 +9,10 @@ from skimage.filters import threshold_sauvola
 def imshow(*unnamedMat, **namedMat):
     for name, matOrMatWithTitle in itertools.chain(enumerate(unnamedMat), namedMat.items()):
         if matOrMatWithTitle is None:
+            try:
+                cv2.destroyWindow(name)
+            except:
+                pass
             continue
         if isinstance(matOrMatWithTitle, (tuple, list)) and len(matOrMatWithTitle) == 2:
             mat, title = matOrMatWithTitle
@@ -35,6 +39,29 @@ def fit_image_to_shape(image, dstShape):
     if scale >= 1:
         return image
     return cv2.resize(image, None, None, scale, scale)
+
+
+def imResize(image, boxes, desired_w, desired_h):
+    h, w = imSize(image)
+    image = cv2.resize(image, (desired_h, desired_w))
+    if boxes is None:
+        return image, None
+    # fix object's position and size
+    new_boxes = []
+    kw = desired_w / w
+    kh = desired_h / h
+    for x1, y1, x2, y2 in boxes:
+        x1 = round(x1 * kw)
+        x1 = max(min(x1, desired_w), 0)
+        x2 = round(x2 * kw)
+        x2 = max(min(x2, desired_w), 0)
+
+        y1 = round(y1 * kh)
+        y1 = max(min(y1, desired_h), 0)
+        y2 = round(y2 * kh)
+        y2 = max(min(y2, desired_h), 0)
+        new_boxes.append((x1, y1, x2, y2))
+    return image, new_boxes
 
 
 def fitToWidth(image, desiredWidth, fillValue):

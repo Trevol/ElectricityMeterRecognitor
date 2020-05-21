@@ -11,7 +11,7 @@ from time import time_ns
 from albumentations import BboxParams, Compose
 
 from utils.iter_utils import batchItems, unzip
-from utils.imutils import hStack, imSize, fill, imChannels
+from utils.imutils import hStack, imSize, fill, imChannels, imResize
 from yolo.dataset.augment import resize_image
 from yolo.utils.box import create_anchor_boxes
 
@@ -90,27 +90,6 @@ class _utils:
         return images
 
     @staticmethod
-    def resizeImage(image, boxes, desired_w, desired_h):
-        h, w = imSize(image)
-        image = cv2.resize(image, (desired_h, desired_w))
-        # fix object's position and size
-        new_boxes = []
-        kw = desired_w / w
-        kh = desired_h / h
-        for x1, y1, x2, y2 in boxes:
-            x1 = round(x1 * kw)
-            x1 = max(min(x1, desired_w), 0)
-            x2 = round(x2 * kw)
-            x2 = max(min(x2, desired_w), 0)
-
-            y1 = round(y1 * kh)
-            y1 = max(min(y1, desired_h), 0)
-            y2 = round(y2 * kh)
-            y2 = max(min(y2, desired_h), 0)
-            new_boxes.append((x1, y1, x2, y2))
-        return image, new_boxes
-
-    @staticmethod
     def padToNetSize(image, netSize, fillValue=0):
         h, w = imSize(image)
         ch = imChannels(image)
@@ -141,7 +120,7 @@ class _utils:
         image, boxes, labels = image_boxes_labels
         r = augmentations(image=image, bboxes=boxes, labels=labels)
         image, boxes, labels = r['image'], r['bboxes'], r['labels']
-        image, boxes = cls.resizeImage(image, boxes, netSize, netSize)
+        image, boxes = imResize(image, boxes, netSize, netSize)
         # image = cls.padToNetSize(image, netSize, fillValue=0)
         return image, boxes, labels
 

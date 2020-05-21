@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+
+from utils.bbox_utils import imageByBox
 from utils.imutils import binarizeSauvola, imSize, fill, imshowWait, imInvert
 from yolo.frontend import YoloDetector
 from yolo.net import Yolonet
@@ -43,27 +45,27 @@ class DigitsOnScreenModel:
             binarized = binarizeSauvola(inverted, windowSize=41, k=.1)
             binarized = imInvert(binarized, out=binarized)
             binarized = cv2.cvtColor(binarized, cv2.COLOR_GRAY2RGB)
-
-            pad = 40
-            h, w = imSize(binarized)
-            biggerImage = fill([h + pad * 2, w + pad * 2, 3], 0)
-            biggerImage[pad:h + pad, pad:w + pad] = binarized
-            preprocessed = biggerImage
-
-            # imshowWait(DEBUG=preprocessed)
-            return preprocessed
+            # imshowWait(DEBUG=binarized)
+            return binarized
 
         def postprocess(self, boxes):
             pad = self.pad
             boxes = [(x1 - pad, y1 - pad, x2 - pad, y2 - pad) for x1, y1, x2, y2 in boxes]
             return boxes
 
-    def detectDigits(self, image):
+        def extendDetectionBox(self, proposedBox):
+            x1, y1, x2, y2 = proposedBox
+            pad = self.pad
+            return x1 - pad, y1 - pad, x2 + pad, y2 + pad
+
+    def detectDigits(self, image, proposedBox):
         io = self._io()
-        preprocessed = io.preprocess(image)
-        boxes, labels, probs = self.detect(preprocessed, .8)
-        boxes = io.postprocess(boxes)
-        return boxes, labels, probs
+        viewImage = imageByBox(image, proposedBox)
+        preprocessed = io.preprocess(viewImage)
+        boxes, labels, probs = self.detect(preprocessed, .9)
+        # TODO: sort result by box.x1 (from left to right)
+        # boxes = io.postprocess(boxes)
+        return viewImage, boxes, labels, probs
 
     @classmethod
     def createWithLastWeights(cls):
