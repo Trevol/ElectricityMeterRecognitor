@@ -2,6 +2,7 @@ import cv2
 from counter_screen.model.CounterScreenModel import CounterScreenModel
 from digits_on_screen.DigitsOnScreenModel import DigitsOnScreenModel
 from utils import toInt
+from utils.Timer import timeit
 from utils.bbox_utils import imageByBox
 from utils.detection_visualization import drawObjects
 from utils.imutils import imshowWait
@@ -53,10 +54,12 @@ def main():
     screenDetector = createScreenDetector()
     digitsDetector = createDigitsDetector()
     for image, imagePath in frames():
-        screenBox = screenDetector.detectScreen(image)
+        with timeit('Detect screen'):
+            screenBox = screenDetector.detectScreen(image)
         screenImg = None
         if screenBox is not None:
-            screenImg, digitBoxes, digits, digitProbs = digitsDetector.detectDigits(image, screenBox)
+            with timeit('Detect digits on screen'):
+                screenImg, digitBoxes, digits, digitProbs = digitsDetector.detectDigits(image, screenBox)
             # display(image, screenBox, digits, digitBoxes)
             drawDigits(screenImg, digitBoxes, digits)
 
